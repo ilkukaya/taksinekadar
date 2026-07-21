@@ -1,0 +1,54 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Breadcrumb from "../components/navigation/Breadcrumb.astro";
+import FareCalculator from "../components/calculator/FareCalculator.astro";
+import AdSlotAfterCalculator from "../components/ads/AdSlotAfterCalculator.astro";
+import { buildPageMeta } from "../lib/seo/meta";
+import { buildCalculatorWebApplicationSchema } from "../lib/schema/web-application";
+
+const meta = buildPageMeta({
+  title: "Taksi Ücreti Hesaplama",
+  description:
+    "İlinizi ve mesafeyi girin, güncel tarifeye göre tahmini taksi ücretinizi anında hesaplayın. Hesaplama tamamen tarayıcınızda çalışır, girdileriniz kaydedilmez.",
+  path: "/taksi-ucreti-hesaplama/",
+});
+
+const structuredData = [buildCalculatorWebApplicationSchema()];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Taksi Ücreti Hesaplama", path: "/taksi-ucreti-hesaplama/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Taksi Ücreti Hesaplama</h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      İlinizi, araç türünü ve mesafeyi girin; güncel tarifeye göre tahmini ücretinizi hemen görün.
+    </p>
+
+    <div class="mt-8">
+      <FareCalculator />
+    </div>
+  </section>
+
+  <AdSlotAfterCalculator />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h2 class="text-ink-900 text-xl font-bold">Hesaplama nasıl çalışır?</h2>
+    <p class="text-ink-600 mt-2">
+      Tahmini tutar; açılış ücreti, mesafe bedeli, varsa bekleme bedeli ve ek geçiş ücretinin
+      toplanıp o il için belirlenmiş minimum ücretle karşılaştırılmasıyla hesaplanır. Gerçek
+      taksimetre tutarı trafik, bekleme, güzergâh, köprü ve otoyol geçişleri nedeniyle değişebilir.
+    </p>
+    <a
+      href="/rehber/taksi-ucreti-nasil-hesaplanir/"
+      class="text-ink-800 mt-3 inline-block font-medium underline"
+    >
+      Hesaplama yöntemini ayrıntılı okuyun →
+    </a>
+  </section>
+</BaseLayout>

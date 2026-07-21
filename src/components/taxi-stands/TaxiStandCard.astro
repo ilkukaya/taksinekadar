@@ -1,0 +1,44 @@
+---
+import type { TaxiStand } from "../../lib/validation/schemas";
+import PhoneCallButton from "../common/PhoneCallButton.astro";
+import ExternalMapLink from "../common/ExternalMapLink.astro";
+import { formatDateTR } from "../../lib/utils/format";
+
+interface Props {
+  stand: TaxiStand;
+  href: string;
+}
+
+const { stand, href } = Astro.props;
+const mapQuery = stand.mapQuery ?? `${stand.name} ${stand.address ?? ""}`.trim();
+---
+
+<article class="card flex flex-col gap-3">
+  <div>
+    <h3 class="text-ink-900 text-lg font-semibold">
+      <a href={href} class="hover:underline">{stand.name}</a>
+    </h3>
+    {stand.neighborhood && <p class="text-ink-500 text-sm">{stand.neighborhood}</p>}
+  </div>
+
+  {stand.address && <p class="text-ink-600 text-sm">{stand.address}</p>}
+  {stand.openingHours && <p class="text-ink-600 text-sm">Çalışma saatleri: {stand.openingHours}</p>}
+  {stand.is24Hours === true && <p class="text-call-600 text-sm font-medium">7/24 açık</p>}
+  {
+    stand.status === "temporarily-closed" && (
+      <p class="text-taxi-700 text-sm font-medium">Geçici olarak kapalı</p>
+    )
+  }
+
+  <div class="mt-1 flex flex-wrap gap-2">
+    {stand.phonePrimary && <PhoneCallButton phone={stand.phonePrimary} />}
+  </div>
+
+  <ExternalMapLink query={mapQuery} />
+
+  {
+    stand.lastVerifiedAt && (
+      <p class="text-ink-400 text-xs">Son kontrol: {formatDateTR(stand.lastVerifiedAt)}</p>
+    )
+  }
+</article>

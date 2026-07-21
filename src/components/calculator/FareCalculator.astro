@@ -1,0 +1,243 @@
+---
+import { getActiveProvinces } from "../../lib/repositories/provinces";
+import { getCurrentTariffs } from "../../lib/repositories/tariffs";
+import { VEHICLE_TYPES, VEHICLE_TYPE_LABELS } from "../../config/vehicle-types";
+
+interface Props {
+  preselectedProvinceId?: string;
+}
+
+const { preselectedProvinceId } = Astro.props;
+
+const provinces = [...getActiveProvinces()].sort((a, b) => a.name.localeCompare(b.name, "tr"));
+
+// Only province-wide (non-district-scoped) active tariffs feed the generic calculator.
+const activeTariffs = getCurrentTariffs().filter((t) => t.status === "active" && !t.districtId);
+
+type TariffFields = {
+  openingFee: number;
+  pricePerKm: number;
+  minimumFare: number;
+  waitingFeePerMinute: number;
+  validFrom: string;
+  lastVerifiedAt: string;
+  sourceName: string;
+};
+
+const tariffLookup: Record<string, Record<string, TariffFields>> = {};
+for (const t of activeTariffs) {
+  tariffLookup[t.provinceId] ??= {};
+  tariffLookup[t.provinceId][t.vehicleType] = {
+    openingFee: t.openingFee,
+    pricePerKm: t.pricePerKm,
+    minimumFare: t.minimumFare,
+    waitingFeePerMinute: t.waitingFeePerMinute ?? 0,
+    validFrom: t.validFrom,
+    lastVerifiedAt: t.lastVerifiedAt,
+    sourceName: t.sourceName,
+  };
+}
+
+const verifiedProvinceIds = new Set(Object.keys(tariffLookup));
+---
+
+<div class="card" data-fare-calculator>
+  <form id="fare-calculator-form" class="space-y-4">
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="block">
+        <span class="text-ink-700 mb-1 block text-sm font-medium">İl</span>
+        <select
+          name="provinceId"
+          required
+          class="border-ink-200 w-full rounded-lg border px-3 py-2"
+        >
+          <option value="" disabled selected={!preselectedProvinceId}>İl seçin</option>
+          {
+            provinces.map((p) => (
+              <option
+                value={p.id}
+                selected={p.id === preselectedProvinceId}
+                disabled={!verifiedProvinceIds.has(p.id)}
+              >
+                {p.name}
+                {!verifiedProvinceIds.has(p.id) ? " (tarife doğrulanmadı)" : ""}
+              </option>
+            ))
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="text-ink-700 mb-1 block text-sm font-medium">Araç türü</span>
+        <select name="vehicleType" class="border-ink-200 w-full rounded-lg border px-3 py-2">
+          {
+            VEHICLE_TYPES.map((vt) => (
+              <option value={vt} selected={vt === "yellow"}>
+                {VEHICLE_TYPE_LABELS[vt]}
+              </option>
+            ))
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class="text-ink-700 mb-1 block text-sm font-medium">Mesafe (km)</span>
+        <input
+          type="number"
+          name="distanceKm"
+          min="0"
+          step="0.1"
+          required
+          placeholder="Örn. 10"
+          class="border-ink-200 w-full rounded-lg border px-3 py-2"
+        />
+      </label>
+
+      <label class="block">
+        <span class="text-ink-700 mb-1 block text-sm font-medium"
+          >Bekleme süresi (dakika, isteğe bağlı)</span
+        >
+        <input
+          type="number"
+          name="waitingMinutes"
+          min="0"
+          step="1"
+          placeholder="0"
+          class="border-ink-200 w-full rounded-lg border px-3 py-2"
+        />
+      </label>
+
+      <label class="block sm:col-span-2">
+        <span class="text-ink-700 mb-1 block text-sm font-medium"
+          >Ek geçiş ücreti (köprü/otoyol, TL, isteğe bağlı)</span
+        >
+        <input
+          type="number"
+          name="extraTollFee"
+          min="0"
+          step="0.01"
+          placeholder="0"
+          class="border-ink-200 w-full rounded-lg border px-3 py-2"
+        />
+      </label>
+    </div>
+
+    <button type="submit" class="btn-primary w-full sm:w-auto">Ücreti Hesapla</button>
+  </form>
+
+  <div id="fare-calculator-result" class="mt-6 hidden" aria-live="polite"></div>
+  <p id="fare-calculator-message" class="text-ink-600 mt-6 hidden text-sm" role="status"></p>
+
+  <script
+    type="application/json"
+    id="fare-calculator-tariff-data"
+    is:inline
+    set:html={JSON.stringify(tariffLookup)}
+  />
+</div>
+
+<p class="text-ink-400 mt-3 text-xs">
+  Gerçek taksimetre tutarı trafik, bekleme, güzergâh, köprü ve otoyol geçişleri nedeniyle
+  değişebilir. Girdileriniz kaydedilmez; hesaplama tamamen tarayıcınızda çalışır.
+</p>
+
+<script>
+  import { calculateFare } from "../../lib/calculation/fare-calculator";
+  import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
+
+  type TariffFields = {
+    openingFee: number;
+    pricePerKm: number;
+    minimumFare: number;
+    waitingFeePerMinute: number;
+    validFrom: string;
+    lastVerifiedAt: string;
+    sourceName: string;
+  };
+
+  function escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  const dataEl = document.getElementById("fare-calculator-tariff-data");
+  const tariffLookup: Record<string, Record<string, TariffFields>> = dataEl?.textContent
+    ? JSON.parse(dataEl.textContent)
+    : {};
+
+  const form = document.getElementById("fare-calculator-form") as HTMLFormElement | null;
+  const resultEl = document.getElementById("fare-calculator-result");
+  const messageEl = document.getElementById("fare-calculator-message");
+
+  function showMessage(text: string) {
+    if (!messageEl || !resultEl) return;
+    messageEl.textContent = text;
+    messageEl.classList.remove("hidden");
+    resultEl.classList.add("hidden");
+  }
+
+  form?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (!resultEl || !messageEl) return;
+
+    const formData = new FormData(form);
+    const provinceId = String(formData.get("provinceId") || "");
+    const vehicleType = String(formData.get("vehicleType") || "yellow");
+    const distanceKm = Number(formData.get("distanceKm"));
+    const waitingMinutes = Number(formData.get("waitingMinutes") || 0);
+    const extraTollFee = Number(formData.get("extraTollFee") || 0);
+
+    const tariffFields = tariffLookup[provinceId]?.[vehicleType];
+    if (!tariffFields) {
+      showMessage("Bu il/araç türü için güncel tarife henüz doğrulanmadı.");
+      return;
+    }
+
+    try {
+      const result = calculateFare(
+        {
+          id: `${provinceId}-${vehicleType}`,
+          provinceId,
+          vehicleType: vehicleType as never,
+          openingFee: tariffFields.openingFee,
+          pricePerKm: tariffFields.pricePerKm,
+          minimumFare: tariffFields.minimumFare,
+          waitingFeePerMinute: tariffFields.waitingFeePerMinute,
+          validFrom: tariffFields.validFrom,
+          lastVerifiedAt: tariffFields.lastVerifiedAt,
+          sourceName: tariffFields.sourceName,
+          sourceUrl: undefined,
+          sourceDocument: undefined,
+          sourceDate: undefined,
+          confidenceScore: 100,
+          status: "active",
+          createdAt: tariffFields.validFrom,
+          updatedAt: tariffFields.validFrom,
+        },
+        { distanceKm, waitingMinutes, extraTollFee },
+      );
+
+      resultEl.innerHTML = `
+        <p class="text-sm text-ink-500">Tahmini toplam ücret</p>
+        <p class="text-3xl font-bold text-ink-900">${formatCurrencyTRY(result.estimatedTotal)}</p>
+        <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-ink-600">
+          <dt>Açılış ücreti</dt><dd>${formatCurrencyTRY(result.openingFee)}</dd>
+          <dt>Mesafe bedeli (${result.distanceKm} km)</dt><dd>${formatCurrencyTRY(result.distanceAmount)}</dd>
+          <dt>Bekleme bedeli</dt><dd>${formatCurrencyTRY(result.waitingAmount)}</dd>
+          <dt>Ek geçiş</dt><dd>${formatCurrencyTRY(result.extraTollFee)}</dd>
+          <dt>Minimum ücret uygulandı mı?</dt><dd>${result.minimumFareApplied ? "Evet" : "Hayır"}</dd>
+        </dl>
+        <p class="mt-4 text-xs text-ink-400">
+          Tarife ${formatDateTR(result.validFrom)} tarihinde yürürlüğe girmiştir. Kaynak: ${escapeHtml(result.sourceName)}.
+        </p>
+      `;
+      resultEl.classList.remove("hidden");
+      messageEl.classList.add("hidden");
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : "Hesaplama sırasında bir hata oluştu.");
+    }
+  });
+</script>

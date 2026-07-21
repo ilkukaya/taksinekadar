@@ -1,0 +1,111 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import FareCalculator from "../../components/calculator/FareCalculator.astro";
+import SourceNote from "../../components/common/SourceNote.astro";
+import UnverifiedNotice from "../../components/common/UnverifiedNotice.astro";
+import AdSlotAfterCalculator from "../../components/ads/AdSlotAfterCalculator.astro";
+import { buildPageMeta, withBrandSuffix } from "../../lib/seo/meta";
+import { canonicalUrl } from "../../config/site";
+import { getActiveAirports } from "../../lib/repositories/airports";
+import { getProvinceById } from "../../lib/repositories/provinces";
+import { getDistrictById } from "../../lib/repositories/districts";
+import { getActiveTariff } from "../../lib/repositories/tariffs";
+import { locativeOf } from "../../lib/language/turkish-suffix";
+import type { Airport } from "../../lib/validation/schemas";
+
+export function getStaticPaths() {
+  return getActiveAirports().map((airport) => ({
+    params: { airport: airport.slug },
+    props: { airport },
+  }));
+}
+
+const { airport } = Astro.props as { airport: Airport };
+const province = getProvinceById(airport.provinceId);
+const district = getDistrictById(airport.districtId);
+const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
+
+const path = `/havalimani/${airport.slug}/`;
+const title = withBrandSuffix(`${airport.name} Taksi Ücreti`);
+const description = `${airport.name} ile ${province?.name ?? ""} arasında taksi ücreti bilgisi, il/ilçe konumu ve güncel tarife.`;
+
+const meta = buildPageMeta({ title, description, path });
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: canonicalUrl(path),
+  },
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Havalimanı", path: "/havalimani/" },
+      { name: airport.name, path },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">{airport.name} Taksi Ücreti</h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      {airport.name}, {province?.name} iline bağlı {district?.name} ilçesinde yer alır.
+      {airport.locationNote && ` ${airport.locationNote}.`}
+    </p>
+
+    {
+      tariff ? (
+        <p class="text-ink-700 mt-4">
+          {locativeOf(province?.name ?? "")} güncel taksi tarifesiyle bu havalimanından yapılacak
+          yolculuğun tahmini ücretini aşağıdaki hesaplama aracıyla öğrenebilirsiniz.
+        </p>
+      ) : (
+        <div class="mt-4">
+          <UnverifiedNotice
+            message={`${province?.name ?? "Bu il"} için güncel taksi tarifesi henüz doğrulanmadı.`}
+          />
+        </div>
+      )
+    }
+
+    <div class="mt-8">
+      <FareCalculator preselectedProvinceId={province?.id} />
+    </div>
+  </section>
+
+  <AdSlotAfterCalculator />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <p class="text-ink-600 text-sm">
+      Güzergâh üzerinde köprü veya ücretli otoyol geçişi varsa bu tutar taksimetre ücretine ayrıca
+      eklenir ve yaygın uygulamada yolcu tarafından karşılanır.
+      <a href="/rehber/kopru-ucretini-kim-oder/" class="text-ink-800 font-medium underline">
+        Ayrıntılı bilgi →
+      </a>
+    </p>
+  </section>
+
+  {
+    province && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">
+          {province.name} taksi ücreti sayfasına git →
+        </a>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-3xl px-4 pb-10">
+    <SourceNote
+      sourceName="DHMİ / Wikipedia / havalimanı resmî kaynakları"
+      sourceUrl={airport.sourceUrl}
+      lastVerifiedAt={airport.lastVerifiedAt}
+    />
+  </section>
+</BaseLayout>

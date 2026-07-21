@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Taksi Ne Kadar? logosu">
+  <rect width="512" height="512" fill="#F5B700" />
+  <text
+    x="256"
+    y="330"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-weight="700"
+    font-size="220"
+    fill="#24272D"
+  >?</text>
+</svg>

@@ -1,0 +1,81 @@
+name: Refresh Data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Monthly, 1st of the month at 03:00 UTC.
+    - cron: "0 3 1 * *"
+
+env:
+  PUBLIC_ADSENSE_PUB_ID: ${{ secrets.ADSENSE_PUB_ID }}
+  INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Geofabrik/OSM and municipal-portal imports are Phase 2 work — these steps run the
+      # real pipeline scripts, which currently no-op with a clear message until a Turkey
+      # PBF extract and per-city parsers are wired up (see scripts/import-osm.ts).
+      - name: Import OSM taxi stand candidates
+        run: pnpm data:import-osm
+
+      - name: Import municipal open-data taxi stand candidates
+        run: pnpm data:import-municipal
+
+      - name: Merge imported candidates
+        run: pnpm data:merge
+
+      - name: Normalize data
+        run: pnpm data:normalize
+
+      - name: Validate data
+        run: pnpm data:validate
+
+      - name: Validate phone numbers
+        run: pnpm data:validate-phones
+
+      - name: Validate geography
+        run: pnpm data:validate-geography
+
+      - name: Detect duplicates
+        run: pnpm data:duplicates
+
+      - name: Generate change report
+        run: pnpm data:change-report
+
+      - name: Build
+        run: pnpm build
+
+      - name: Commit data changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "chore: scheduled data refresh"
+          git push
+
+      - name: Deploy to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: pnpm exec netlify-cli deploy --prod --dir=dist --site="$NETLIFY_SITE_ID"
+
+      - name: Submit changed URLs to IndexNow
+        run: pnpm indexnow:submit

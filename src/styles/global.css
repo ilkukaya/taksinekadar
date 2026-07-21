@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens for "Taksi Ne Kadar?". Palette follows the brand brief:
+ * taxi-yellow accent, dark anthracite body text, off-white ("kırık beyaz")
+ * background, and a WCAG AA green reserved for phone call-to-action buttons.
+ * No webfont is loaded on purpose — the system font stack keeps every page
+ * at zero extra network requests and avoids font-swap layout shift.
+ */
+@theme {
+  --color-taxi-50: #fffbeb;
+  --color-taxi-100: #fff3c4;
+  --color-taxi-200: #ffe685;
+  --color-taxi-300: #ffd53d;
+  --color-taxi-400: #ffc629;
+  --color-taxi-500: #f5b700;
+  --color-taxi-600: #d69e00;
+  --color-taxi-700: #ad7d00;
+  --color-taxi-800: #8a6300;
+  --color-taxi-900: #705100;
+
+  --color-ink-50: #f4f5f6;
+  --color-ink-100: #e4e6e8;
+  --color-ink-200: #c7cbd1;
+  --color-ink-300: #a2a8b0;
+  --color-ink-400: #757e88;
+  --color-ink-500: #5a616b;
+  --color-ink-600: #454a53;
+  --color-ink-700: #363a42;
+  --color-ink-800: #24272d;
+  --color-ink-900: #17191d;
+
+  --color-paper: #fbfaf7;
+  --color-paper-dim: #f3f1ea;
+
+  --color-call-50: #eafbf1;
+  --color-call-500: #15803d;
+  --color-call-600: #106a32;
+  --color-call-700: #0d5729;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-paper text-ink-800 font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-ink-900 font-semibold;
+  }
+
+  a {
+    @apply underline-offset-2;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-taxi-600);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-call {
+    @apply bg-call-500 hover:bg-call-600 focus-visible:bg-call-600 inline-flex items-center gap-2 rounded-lg px-4 py-3 text-base font-semibold text-white transition-colors;
+  }
+
+  .btn-primary {
+    @apply bg-taxi-400 text-ink-900 hover:bg-taxi-500 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3 text-base font-semibold transition-colors;
+  }
+
+  .card {
+    @apply border-ink-100 rounded-xl border bg-white p-4 shadow-sm;
+  }
+
+  .skip-link {
+    @apply focus:bg-ink-900 sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:px-4 focus:py-2 focus:text-white;
+  }
+
+  /* Manual markdown typography for rehber (guide) article bodies — no Tailwind Typography
+     plugin dependency, just enough rules to make prose content readable. */
+  .article-content {
+    @apply text-ink-700 text-base leading-relaxed;
+  }
+
+  .article-content h2 {
+    @apply text-ink-900 mt-8 text-xl font-bold;
+  }
+
+  .article-content h3 {
+    @apply text-ink-900 mt-6 text-lg font-semibold;
+  }
+
+  .article-content p {
+    @apply mt-4;
+  }
+
+  .article-content ul,
+  .article-content ol {
+    @apply mt-4 list-outside space-y-1 pl-6;
+  }
+
+  .article-content ul {
+    @apply list-disc;
+  }
+
+  .article-content ol {
+    @apply list-decimal;
+  }
+
+  .article-content a {
+    @apply text-ink-800 font-medium underline;
+  }
+
+  .article-content pre {
+    @apply bg-ink-900 mt-4 overflow-x-auto rounded-lg p-4 text-sm text-white;
+  }
+
+  .article-content code {
+    @apply bg-ink-100 rounded px-1.5 py-0.5 text-sm;
+  }
+
+  .article-content pre code {
+    @apply bg-transparent p-0;
+  }
+}

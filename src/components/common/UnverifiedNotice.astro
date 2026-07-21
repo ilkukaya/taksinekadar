@@ -1,0 +1,14 @@
+---
+interface Props {
+  message?: string;
+}
+
+const { message = "Bu il için güncel tarife henüz doğrulanmadı." } = Astro.props;
+---
+
+<div class="border-taxi-300 bg-taxi-50 text-ink-800 rounded-xl border p-4" role="status">
+  <p class="font-medium">{message}</p>
+  <p class="text-ink-600 mt-1 text-sm">
+    Resmî kaynaklardan doğrulanan bir tarife bulunduğunda bu sayfa güncellenecektir.
+  </p>
+</div>

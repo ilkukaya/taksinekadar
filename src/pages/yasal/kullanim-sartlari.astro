@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { SITE } from "../../config/site";
+
+const meta = buildPageMeta({
+  title: "Kullanım Şartları",
+  description:
+    "Taksi Ne Kadar? sitesinin kullanım şartları ve hesaplama aracının doğruluk sınırlamaları.",
+  path: "/yasal/kullanim-sartlari/",
+  noindex: true,
+});
+---
+
+<BaseLayout meta={meta}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Kullanım Şartları", path: "/yasal/kullanim-sartlari/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Kullanım Şartları</h1>
+
+    <h2 class="text-ink-900 mt-8 text-xl font-bold">Hizmetin kapsamı</h2>
+    <p class="text-ink-600 mt-2">
+      {SITE.name} ({SITE.domain}), taksi ücreti tahmini hesaplayan ve kamuya açık taksi durağı
+      bilgilerini derleyen bir bilgilendirme platformudur. Site üzerinden taksi çağırma,
+      rezervasyon, ödeme veya sürücü-yolcu eşleştirme hizmeti sunulmaz.
+    </p>
+
+    <h2 class="text-ink-900 mt-8 text-xl font-bold">Hesaplama aracının doğruluk sınırı</h2>
+    <p class="text-ink-600 mt-2">
+      Hesaplama aracı, girilen mesafe ve süreye göre bir <strong>tahmin</strong> üretir. Gerçek taksimetre
+      tutarı; trafik yoğunluğu, seçilen güzergâh, bekleme süresi ve köprü/otoyol geçişleri nedeniyle bu
+      tahminden farklı olabilir. Nihai ödeme tutarı her zaman taksimetrede görülen tutardır.
+    </p>
+
+    <h2 class="text-ink-900 mt-8 text-xl font-bold">Veri doğruluğu</h2>
+    <p class="text-ink-600 mt-2">
+      Tarife ve durak bilgilerini güvenilir kaynaklardan derlemeye özen gösteriyoruz; ancak
+      belediyeler ve ilgili kurumlar tarifeleri önceden haber vermeksizin değiştirebilir. Kaynağı
+      belirtilen her bilginin son kontrol tarihine dikkat etmenizi öneririz.
+    </p>
+
+    <h2 class="text-ink-900 mt-8 text-xl font-bold">Sorumluluk sınırı</h2>
+    <p class="text-ink-600 mt-2">
+      Sitedeki bilgilere dayanarak alınan kararlardan doğabilecek zararlardan {SITE.name}
+      sorumlu tutulamaz. Kesin ücret ve hizmet bilgisi için ilgili taksi işletmesi veya resmî kurumla
+      doğrudan iletişime geçmenizi öneririz.
+    </p>
+  </section>
+</BaseLayout>

@@ -1,0 +1,31 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SearchBox from "../components/search/SearchBox.astro";
+import { buildPageMeta } from "../lib/seo/meta";
+
+const meta = buildPageMeta({
+  title: "Sayfa Bulunamadı",
+  description: "Aradığınız sayfa bulunamadı.",
+  path: "/404/",
+  noindex: true,
+});
+---
+
+<BaseLayout meta={meta}>
+  <section class="mx-auto max-w-2xl px-4 py-16 text-center">
+    <p class="text-taxi-600 text-sm font-semibold tracking-wide uppercase">404</p>
+    <h1 class="text-ink-900 mt-2 text-3xl font-bold">Sayfa Bulunamadı</h1>
+    <p class="text-ink-600 mt-3 text-lg">Aradığınız sayfa taşınmış veya kaldırılmış olabilir.</p>
+
+    <div class="mx-auto mt-8 max-w-md text-left">
+      <SearchBox placeholder="İl, ilçe veya durak ara..." />
+    </div>
+
+    <div class="mt-8 flex flex-wrap justify-center gap-4 text-sm font-medium">
+      <a href="/" class="text-ink-800 underline">Ana Sayfa</a>
+      <a href="/taksi-ucreti-hesaplama/" class="text-ink-800 underline">Ücret Hesaplama</a>
+      <a href="/iller/" class="text-ink-800 underline">İller</a>
+      <a href="/taksi-duraklari/" class="text-ink-800 underline">Taksi Durakları</a>
+    </div>
+  </section>
+</BaseLayout>

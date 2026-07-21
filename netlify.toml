@@ -1,0 +1,18 @@
+# Deploys are pushed pre-built from GitHub Actions via `netlify deploy --prod --dir=dist`
+# (see .github/workflows/deploy.yml and refresh-data.yml). Netlify itself must NOT build on
+# git push — in the Netlify dashboard, disable "Stop builds" / auto publishing for this site
+# (Site configuration → Build & deploy → Stop builds), since this file alone cannot turn off
+# Netlify's git-triggered auto-build.
+[build]
+  publish = "dist"
+  command = "true"
+
+[[headers]]
+  for = "/sitemaps/*.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=UTF-8"
+
+[[headers]]
+  for = "/sitemap-index.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=UTF-8"

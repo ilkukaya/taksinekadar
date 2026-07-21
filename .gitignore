@@ -1,0 +1,42 @@
+# build
+dist/
+.astro/
+.output/
+
+# dependencies
+node_modules/
+
+# environment
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
+*.log
+
+# editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# os
+.DS_Store
+Thumbs.db
+
+# test artifacts
+test-results/
+playwright-report/
+coverage/
+blob-report/
+
+# generated data / reports (rebuilt every run — never hand-edited)
+data/normalized/
+data/reports/
+public/sitemaps/
+public/sitemap-index.xml
+src/generated/
+
+# netlify
+.netlify/

@@ -1,0 +1,33 @@
+---
+import { SITE } from "../../config/site";
+
+const FOOTER_LINKS = [
+  { href: "/yasal/veri-kaynaklari/", label: "Veri Kaynakları" },
+  { href: "/yasal/gizlilik-politikasi/", label: "Gizlilik Politikası" },
+  { href: "/yasal/kullanim-sartlari/", label: "Kullanım Şartları" },
+  { href: "/yasal/iletisim/", label: "İletişim" },
+];
+
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="border-ink-100 mt-16 border-t bg-white">
+  <div class="text-ink-600 mx-auto max-w-6xl px-4 py-10 text-sm">
+    <p class="text-ink-900 font-semibold">{SITE.name}</p>
+    <p class="mt-1 max-w-xl">{SITE.description}</p>
+    <nav class="mt-6 flex flex-wrap gap-x-6 gap-y-2" aria-label="Alt menü">
+      {
+        FOOTER_LINKS.map((link) => (
+          <a href={link.href} class="hover:text-ink-900 hover:underline">
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+    <p class="text-ink-400 mt-6 text-xs">
+      © {currentYear}
+      {SITE.name}. Fiyatlar tahminidir; gerçek taksimetre tutarı trafik, bekleme ve güzergâha göre
+      değişebilir.
+    </p>
+  </div>
+</footer>

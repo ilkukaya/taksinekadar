@@ -1,0 +1,38 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+
+const meta = buildPageMeta({
+  title: "Taksi Durakları",
+  description:
+    "Türkiye genelinde taksi durağı telefon ve adres bilgileri; il bazlı doğrulanmış veriler eklendikçe burada yayınlanacaktır.",
+  path: "/taksi-duraklari/",
+  noindex: true,
+});
+---
+
+<BaseLayout meta={meta}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Taksi Durakları", path: "/taksi-duraklari/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Taksi Durakları</h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      Taksi durağı telefon ve adres bilgilerini; belediye açık veri kaynakları ve OpenStreetMap gibi
+      kamuya açık kaynaklardan doğrulayarak topluyoruz. Bu çalışma devam ettiği için durak verileri
+      henüz yayında değildir.
+    </p>
+    <p class="text-ink-600 mt-3">
+      Bu arada güncel taksi tarifelerine <a
+        href="/tarifeler/"
+        class="text-ink-800 font-medium underline">il tarife sayfalarımızdan</a
+      >
+      ulaşabilirsiniz.
+    </p>
+  </section>
+</BaseLayout>

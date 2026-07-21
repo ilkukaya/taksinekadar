@@ -1,0 +1,70 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { buildCollectionPageSchema } from "../../lib/schema/collection-page";
+import { getAllProvincesWithStats } from "../../lib/repositories/stats";
+
+const provinces = [...getAllProvincesWithStats()].sort((a, b) =>
+  a.name.localeCompare(b.name, "tr"),
+);
+
+const regions = [...new Set(provinces.map((p) => p.region))].sort((a, b) =>
+  a.localeCompare(b, "tr"),
+);
+
+const meta = buildPageMeta({
+  title: "Türkiye'nin 81 İli — Taksi Ücreti ve Durakları",
+  description:
+    "Türkiye'nin 81 ilinin taksi ücreti ve taksi durağı sayfalarına buradan ulaşın; bölgeye göre gruplanmış tam il listesi.",
+  path: "/iller/",
+});
+
+const structuredData = [
+  buildCollectionPageSchema({
+    name: "Türkiye'nin 81 İli",
+    description: "Taksi ücreti ve taksi durakları için il listesi.",
+    path: "/iller/",
+    itemList: provinces.map((p) => ({ name: p.name, path: `/${p.slug}-taksi-ucreti/` })),
+  }),
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "İller", path: "/iller/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Türkiye'nin 81 İli</h1>
+    <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+      Taksi ücreti ve taksi durağı bilgisi için bir il seçin.
+    </p>
+
+    {
+      regions.map((region) => (
+        <div class="mt-10">
+          <h2 class="text-ink-900 text-xl font-semibold">{region}</h2>
+          <ul class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 lg:grid-cols-4">
+            {provinces
+              .filter((p) => p.region === region)
+              .map((province) => (
+                <li>
+                  <a
+                    href={`/${province.slug}-taksi-ucreti/`}
+                    class="text-ink-700 hover:text-ink-900 hover:underline"
+                  >
+                    {province.name}
+                    {province.hasVerifiedTariff ? "" : " (tarife doğrulanmadı)"}
+                  </a>
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))
+    }
+  </section>
+</BaseLayout>

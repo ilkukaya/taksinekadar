@@ -1,0 +1,57 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { buildCollectionPageSchema } from "../../lib/schema/collection-page";
+import { getActiveBusTerminals } from "../../lib/repositories/bus-terminals";
+import { getProvinceById } from "../../lib/repositories/provinces";
+
+const terminals = [...getActiveBusTerminals()].sort((a, b) => a.name.localeCompare(b.name, "tr"));
+
+const meta = buildPageMeta({
+  title: "Türkiye Otogarları — Taksi Ücreti Bilgisi",
+  description:
+    "Türkiye'nin önde gelen şehirlerarası otogarlarının bulunduğu il ve ilçe ile taksi ücreti bilgilerine ulaşın.",
+  path: "/otogar/",
+});
+
+const structuredData = [
+  buildCollectionPageSchema({
+    name: "Türkiye Otogarları",
+    description: "Otogar taksi ücreti sayfaları listesi.",
+    path: "/otogar/",
+    itemList: terminals.map((t) => ({ name: t.name, path: `/otogar/${t.slug}/` })),
+  }),
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Otogar", path: "/otogar/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-4xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Türkiye Otogarları ve Taksi Ücreti</h1>
+    <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+      Şehirlerarası otogardan şehir merkezine taksi ücretini hesaplamak için ilgili otogar sayfasına
+      göz atın.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        terminals.map((terminal) => {
+          const province = getProvinceById(terminal.provinceId);
+          return (
+            <a href={`/otogar/${terminal.slug}/`} class="card block hover:shadow-md">
+              <p class="text-ink-900 font-semibold">{terminal.name}</p>
+              <p class="text-ink-500 mt-1 text-sm">{province?.name}</p>
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
+</BaseLayout>

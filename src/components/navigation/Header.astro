@@ -1,0 +1,55 @@
+---
+import { SITE } from "../../config/site";
+
+const NAV_LINKS = [
+  { href: "/taksi-ucreti-hesaplama/", label: "Ücret Hesaplama" },
+  { href: "/taksi-duraklari/", label: "Taksi Durakları" },
+  { href: "/iller/", label: "İller" },
+  { href: "/tarifeler/", label: "Tarifeler" },
+  { href: "/havalimani/", label: "Havalimanı" },
+  { href: "/rehber/", label: "Rehber" },
+];
+---
+
+<header class="border-ink-100 border-b bg-white">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+    <a href="/" class="text-ink-900 flex items-center gap-2 text-lg font-bold">
+      <img src="/logo.svg" alt={`${SITE.name} logosu`} width="32" height="32" />
+      <span>{SITE.name}</span>
+    </a>
+
+    <nav class="hidden items-center gap-6 md:flex" aria-label="Ana menü">
+      {
+        NAV_LINKS.map((link) => (
+          <a href={link.href} class="text-ink-700 hover:text-ink-900 text-sm font-medium">
+            {link.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <!-- Native <details> disclosure — accessible, keyboard-operable mobile menu with zero JavaScript. -->
+    <details class="relative md:hidden">
+      <summary
+        class="border-ink-200 text-ink-800 list-none rounded-lg border px-3 py-2 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden"
+      >
+        Menü
+      </summary>
+      <nav
+        class="border-ink-100 absolute right-0 z-20 mt-2 w-56 rounded-xl border bg-white p-2 shadow-lg"
+        aria-label="Mobil menü"
+      >
+        {
+          NAV_LINKS.map((link) => (
+            <a
+              href={link.href}
+              class="text-ink-800 hover:bg-paper-dim block rounded-lg px-3 py-2 text-sm"
+            >
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+    </details>
+  </div>
+</header>

@@ -1,0 +1,60 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { buildCollectionPageSchema } from "../../lib/schema/collection-page";
+import { getActiveAirports } from "../../lib/repositories/airports";
+import { getProvinceById } from "../../lib/repositories/provinces";
+
+const airports = [...getActiveAirports()].sort((a, b) => a.name.localeCompare(b.name, "tr"));
+
+const meta = buildPageMeta({
+  title: "Türkiye Havalimanları — Taksi Ücreti Bilgisi",
+  description:
+    "Türkiye'nin önde gelen havalimanlarının bulunduğu il ve ilçe ile taksi ücreti bilgilerine ulaşın.",
+  path: "/havalimani/",
+});
+
+const structuredData = [
+  buildCollectionPageSchema({
+    name: "Türkiye Havalimanları",
+    description: "Havalimanı taksi ücreti sayfaları listesi.",
+    path: "/havalimani/",
+    itemList: airports.map((a) => ({ name: a.name, path: `/havalimani/${a.slug}/` })),
+  }),
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Havalimanı", path: "/havalimani/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-4xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Türkiye Havalimanları ve Taksi Ücreti</h1>
+    <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+      Havalimanından şehir merkezine taksi ücretini hesaplamak için ilgili havalimanı sayfasına göz
+      atın.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        airports.map((airport) => {
+          const province = getProvinceById(airport.provinceId);
+          return (
+            <a href={`/havalimani/${airport.slug}/`} class="card block hover:shadow-md">
+              <p class="text-ink-900 font-semibold">{airport.name}</p>
+              <p class="text-ink-500 mt-1 text-sm">
+                {province?.name}
+                {airport.iataCode ? ` · ${airport.iataCode}` : ""}
+              </p>
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
+</BaseLayout>

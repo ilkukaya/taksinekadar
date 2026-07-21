@@ -1,0 +1,48 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { getCollection } from "astro:content";
+import { formatDateTR } from "../../lib/utils/format";
+
+const guides = (await getCollection("rehber")).sort((a, b) =>
+  b.data.publishedAt.localeCompare(a.data.publishedAt),
+);
+
+const meta = buildPageMeta({
+  title: "Taksi Rehberi — Sık Sorulan Sorular",
+  description:
+    "Taksi ücreti hesaplama, indi-bindi ücreti, taksimetre ve taksi ile ilgili sık sorulan sorulara kaynaklı ve güncel yanıtlar.",
+  path: "/rehber/",
+});
+---
+
+<BaseLayout meta={meta}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Rehber", path: "/rehber/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-4xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Taksi Rehberi</h1>
+    <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+      Taksi ücreti, indi-bindi, taksimetre ve yolcu hakları hakkında sık sorulan sorular.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        guides.map((guide) => (
+          <a href={`/rehber/${guide.id}/`} class="card block hover:shadow-md">
+            <p class="text-ink-900 font-semibold">{guide.data.title}</p>
+            <p class="text-ink-600 mt-1 text-sm">{guide.data.description}</p>
+            <p class="text-ink-400 mt-2 text-xs">
+              Güncelleme: {formatDateTR(guide.data.updatedAt)}
+            </p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

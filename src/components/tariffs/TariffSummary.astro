@@ -1,0 +1,22 @@
+---
+import type { Tariff } from "../../lib/validation/schemas";
+import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
+import { locativeOf } from "../../lib/language/turkish-suffix";
+import { VEHICLE_TYPE_LABELS } from "../../config/vehicle-types";
+
+interface Props {
+  provinceName: string;
+  tariff: Tariff;
+}
+
+const { provinceName, tariff } = Astro.props;
+const vehicleLabel = VEHICLE_TYPE_LABELS[tariff.vehicleType].toLocaleLowerCase("tr-TR");
+---
+
+<p class="text-ink-800 text-lg leading-relaxed">
+  {locativeOf(provinceName)} güncel {vehicleLabel} açılış ücreti{" "}
+  <strong>{formatCurrencyTRY(tariff.openingFee)}</strong>, kilometre ücreti{" "}
+  <strong>{formatCurrencyTRY(tariff.pricePerKm)}</strong> ve minimum/indi-bindi ücreti{" "}
+  <strong>{formatCurrencyTRY(tariff.minimumFare)}</strong>'dir. Tarife{" "}
+  {formatDateTR(tariff.validFrom)} tarihinde yürürlüğe girmiştir.
+</p>

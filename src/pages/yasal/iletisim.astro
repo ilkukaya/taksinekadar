@@ -1,0 +1,42 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { SITE } from "../../config/site";
+
+const meta = buildPageMeta({
+  title: "İletişim",
+  description:
+    "Taksi Ne Kadar? ekibiyle veri düzeltme talepleri ve genel sorularınız için iletişime geçin.",
+  path: "/yasal/iletisim/",
+});
+---
+
+<BaseLayout meta={meta}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "İletişim", path: "/yasal/iletisim/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">İletişim</h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      Yanlış veya güncelliğini yitirmiş bir tarife, telefon numarası ya da adres bilgisi gördüyseniz
+      bize bildirin; en kısa sürede inceleyip düzeltiyoruz.
+    </p>
+
+    <div class="card mt-8">
+      <p class="text-ink-900 font-semibold">E-posta</p>
+      <a href={`mailto:${SITE.contactEmail}`} class="text-ink-700 mt-1 inline-block underline">
+        {SITE.contactEmail}
+      </a>
+    </div>
+
+    <p class="text-ink-500 mt-6 text-sm">
+      {SITE.name}, kullanıcı hesabı veya destek talebi geçmişi tutmaz; e-posta ile ilettiğiniz
+      düzeltme talepleri yalnızca ilgili veri kaydını güncellemek amacıyla kullanılır.
+    </p>
+  </section>
+</BaseLayout>

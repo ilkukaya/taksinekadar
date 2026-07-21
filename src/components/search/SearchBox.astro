@@ -1,0 +1,122 @@
+---
+interface Props {
+  placeholder?: string;
+}
+
+const { placeholder = "İl, ilçe, durak veya havalimanı ara..." } = Astro.props;
+---
+
+<div class="relative" data-search-root>
+  <label for="site-search-input" class="sr-only">Site içinde ara</label>
+  <input
+    id="site-search-input"
+    type="search"
+    autocomplete="off"
+    placeholder={placeholder}
+    class="border-ink-200 w-full rounded-lg border px-4 py-2.5 text-sm"
+    aria-expanded="false"
+    aria-controls="site-search-results"
+  />
+  <ul
+    id="site-search-results"
+    class="border-ink-100 absolute z-20 mt-1 hidden w-full rounded-lg border bg-white shadow-lg"
+    role="listbox"
+  >
+  </ul>
+</div>
+
+<script>
+  type SearchIndexItem = {
+    name: string;
+    type: string;
+    path: string;
+    province?: string;
+  };
+
+  let index: SearchIndexItem[] | null = null;
+
+  const input = document.getElementById("site-search-input") as HTMLInputElement | null;
+  const resultsEl = document.getElementById("site-search-results") as HTMLUListElement | null;
+
+  function escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function normalize(value: string): string {
+    return value
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
+  }
+
+  async function ensureIndex(): Promise<SearchIndexItem[]> {
+    if (index) return index;
+    const response = await fetch("/search-index.json");
+    index = response.ok ? await response.json() : [];
+    return index ?? [];
+  }
+
+  function renderResults(items: SearchIndexItem[]) {
+    if (!resultsEl || !input) return;
+
+    if (items.length === 0) {
+      resultsEl.innerHTML = `<li class="px-4 py-3 text-sm text-ink-500">Sonuç bulunamadı</li>`;
+      resultsEl.classList.remove("hidden");
+      input.setAttribute("aria-expanded", "true");
+      return;
+    }
+
+    resultsEl.innerHTML = items
+      .map(
+        (item) => `
+          <li role="option">
+            <a href="${escapeHtml(item.path)}" class="block px-4 py-2 text-sm text-ink-700 hover:bg-paper-dim">
+              ${escapeHtml(item.name)}
+              ${item.province ? `<span class="text-ink-400"> · ${escapeHtml(item.province)}</span>` : ""}
+            </a>
+          </li>`,
+      )
+      .join("");
+    resultsEl.classList.remove("hidden");
+    input.setAttribute("aria-expanded", "true");
+  }
+
+  function hideResults() {
+    if (!resultsEl || !input) return;
+    resultsEl.classList.add("hidden");
+    resultsEl.innerHTML = "";
+    input.setAttribute("aria-expanded", "false");
+  }
+
+  input?.addEventListener("input", async () => {
+    const query = input.value.trim();
+    if (query.length < 2) {
+      hideResults();
+      return;
+    }
+    const data = await ensureIndex();
+    const normalizedQuery = normalize(query);
+    const matches = data
+      .filter((item) => normalize(item.name).includes(normalizedQuery))
+      .slice(0, 8);
+    renderResults(matches);
+  });
+
+  input?.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") hideResults();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!(event.target instanceof Node)) return;
+    const root = document.querySelector("[data-search-root]");
+    if (root && !root.contains(event.target)) hideResults();
+  });
+</script>

@@ -1,0 +1,83 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { getSiteWideTotals, getAllProvincesWithStats } from "../../lib/repositories/stats";
+
+const totals = getSiteWideTotals();
+const unverified = getAllProvincesWithStats()
+  .filter((p) => !p.hasVerifiedTariff)
+  .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+
+const meta = buildPageMeta({
+  title: "Veri Kaynakları",
+  description:
+    "Taksi Ne Kadar? sitesindeki il, ilçe, tarife, havalimanı ve otogar verilerinin kaynakları ve güncellik yöntemi.",
+  path: "/yasal/veri-kaynaklari/",
+});
+---
+
+<BaseLayout meta={meta}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Veri Kaynakları", path: "/yasal/veri-kaynaklari/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Veri Kaynakları</h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      Bu sayfa, sitedeki verilerin nereden geldiğini ve nasıl güncel tutulduğunu şeffaf biçimde
+      açıklar. Kaynağını doğrulayamadığımız hiçbir tarife, telefon veya adres bilgisini
+      yayımlamayız.
+    </p>
+
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">İl ve İlçe Sınırları</h2>
+    <p class="text-ink-600 mt-2">
+      81 il ve {totals.districtCount} ilçe verisi, birbirinden bağımsız kamuya açık il/ilçe referans veri
+      kümeleri karşılaştırılarak derlenmiştir. Plaka kodu, bölge ve eski isim (varsa) bilgileri bu karşılaştırmayla
+      teyit edilmiştir. Enlem/boylam ve sabit hat alan kodu gibi bazı alanlar, bu sitenin hiçbir özelliği
+      için henüz zorunlu olmadığından ve tarafımızca canlı olarak teyit edilemediğinden şu an boş bırakılmıştır;
+      ileride resmî kaynaklarla doğrulanarak eklenecektir.
+    </p>
+
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Tarifeleri</h2>
+    <p class="text-ink-600 mt-2">
+      Her il sayfasında tarifenin kaynağı (belediye/UKOME kararı, esnaf odası açıklaması veya haber
+      kaynağı), yürürlük tarihi ve son kontrol tarihi ayrı ayrı gösterilir. Kaynağı doğrulanamayan
+      illerde tarife rakamı gösterilmez; bunun yerine "tarife henüz doğrulanmadı" ibaresi yer alır.
+      Şu an aşağıdaki iller bu durumdadır:
+    </p>
+    <ul class="text-ink-500 mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+      {unverified.map((p) => <li>{p.name}</li>)}
+    </ul>
+    <p class="text-ink-500 mt-3 text-sm">
+      Bu illerin bir kısmı (Antalya il geneli, Bursa, Kocaeli, Muğla, Balıkesir) için araştırma bu
+      oturumda erişim kısıtları nedeniyle tamamlanamamıştır; bir sonraki veri güncellemesinde
+      yeniden ele alınacaktır.
+    </p>
+
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">Havalimanı ve Otogar</h2>
+    <p class="text-ink-600 mt-2">
+      Havalimanı ve otogar sayfalarındaki il/ilçe ve konum bilgileri DHMİ (Devlet Hava Meydanları
+      İşletmesi), ilgili işletmecilerin resmî siteleri ve Wikipedia gibi kamuya açık kaynaklar
+      karşılaştırılarak derlenmiştir; her sayfada ilgili kaynak bağlantısı verilir.
+    </p>
+
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Durakları (Yakında)</h2>
+    <p class="text-ink-600 mt-2">
+      Taksi durağı telefon ve adres verileri; OpenStreetMap (ODbL lisansı altında, gerekli atıf
+      verilerek), belediye açık veri portalları ve durakların resmî web siteleri önceliklendirilerek
+      toplanacak ve yayınlanmadan önce doğrulama sürecinden geçirilecektir. Bu özellik henüz yayında
+      değildir.
+    </p>
+
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">Güncelleme Yöntemi</h2>
+    <p class="text-ink-600 mt-2">
+      Veriler, kaynak dosyaların doğrulanması, normalize edilmesi ve mükerrer kayıt taraması gibi
+      adımlardan geçtikten sonra build sürecinde siteye yansıtılır. Kritik bir veri hatası tespit
+      edildiğinde build süreci otomatik olarak durur.
+    </p>
+  </section>
+</BaseLayout>

@@ -1,0 +1,238 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import FareCalculator from "../components/calculator/FareCalculator.astro";
+import SearchBox from "../components/search/SearchBox.astro";
+import AdSlotAfterCalculator from "../components/ads/AdSlotAfterCalculator.astro";
+import AdSlotInContent from "../components/ads/AdSlotInContent.astro";
+import { buildPageMeta } from "../lib/seo/meta";
+import { getAllProvincesWithStats, getSiteWideTotals } from "../lib/repositories/stats";
+import { getCurrentTariffs } from "../lib/repositories/tariffs";
+import { getActiveAirports } from "../lib/repositories/airports";
+import { getCollection } from "astro:content";
+import { formatCurrencyTRY, formatDateTR } from "../lib/utils/format";
+import { locativeOf } from "../lib/language/turkish-suffix";
+import { calculateFare } from "../lib/calculation/fare-calculator";
+
+const provinces = getAllProvincesWithStats();
+const totals = getSiteWideTotals();
+const verifiedTariffs = getCurrentTariffs().filter((t) => t.status === "active" && !t.districtId);
+const provinceById = new Map(provinces.map((p) => [p.id, p]));
+
+const popularCityIds = ["34", "06", "35", "01", "27", "42", "38", "55", "61", "33"];
+const popularCityTariffs = popularCityIds
+  .map((id) => verifiedTariffs.find((t) => t.provinceId === id && t.vehicleType === "yellow"))
+  .filter((t) => t !== undefined)
+  .map((t) => ({ tariff: t, province: provinceById.get(t.provinceId) }))
+  .filter((row) => row.province !== undefined);
+
+// One row per province (its primary/yellow tariff) — a province with several vehicle-type
+// tariffs (e.g. İstanbul's yellow/turquoise/8+1) should appear once here, not three times.
+const recentlyUpdated = [...verifiedTariffs]
+  .filter((t) => t.vehicleType === "yellow")
+  .sort((a, b) => b.validFrom.localeCompare(a.validFrom))
+  .slice(0, 6)
+  .map((t) => ({ tariff: t, province: provinceById.get(t.provinceId) }));
+
+const sampleCalculations = popularCityTariffs.slice(0, 3).map(({ tariff, province }) => ({
+  province: province!,
+  result: calculateFare(tariff, { distanceKm: 10 }),
+}));
+
+const airports = getActiveAirports();
+const guides = (await getCollection("rehber"))
+  .sort((a, b) => b.data.publishedAt.localeCompare(a.data.publishedAt))
+  .slice(0, 6);
+
+const sortedProvinces = [...provinces].sort((a, b) => a.name.localeCompare(b.name, "tr"));
+
+const meta = buildPageMeta({
+  title: "Taksi Ne Kadar? Taksi Ücreti Hesaplama ve Taksi Durakları",
+  description:
+    "Türkiye taksi ücreti hesaplama, güncel taksi tarifeleri ve taksi durakları rehberi. İlinizi seçin, mesafeyi girin, tahmini ücreti hemen görün.",
+  path: "/",
+});
+---
+
+<BaseLayout meta={meta}>
+  <section class="bg-white">
+    <div class="mx-auto max-w-6xl px-4 py-10 sm:py-14">
+      <h1 class="text-ink-900 text-3xl font-bold sm:text-4xl">Taksi Ne Kadar Tutar?</h1>
+      <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+        Güncel taksi tarifesiyle tahmini ücretinizi hesaplayın; Türkiye genelindeki taksi
+        duraklarının telefon ve adres bilgilerini bulun.
+      </p>
+
+      <div class="mt-6 max-w-md">
+        <SearchBox />
+      </div>
+
+      <div class="mt-8 max-w-2xl">
+        <FareCalculator />
+      </div>
+    </div>
+  </section>
+
+  <AdSlotAfterCalculator />
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">Popüler Şehir Tarifeleri</h2>
+    <p class="text-ink-600 mt-1">Kaynağı doğrulanmış, güncel il tarifeleri.</p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        popularCityTariffs.map(({ tariff, province }) => (
+          <a href={`/${province!.slug}-taksi-ucreti/`} class="card block hover:shadow-md">
+            <p class="text-ink-900 text-lg font-semibold">{province!.name}</p>
+            <p class="text-ink-600 mt-1 text-sm">
+              Açılış {formatCurrencyTRY(tariff.openingFee)} · Km{" "}
+              {formatCurrencyTRY(tariff.pricePerKm)}
+            </p>
+            <p class="text-ink-400 mt-1 text-xs">Yürürlük: {formatDateTR(tariff.validFrom)}</p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">İl ve İlçeye Göre Taksi Durağı Bulun</h2>
+    <p class="text-ink-600 mt-1 max-w-2xl">
+      Taksi durağı telefon ve adres bilgilerini il bazında topluyoruz; ilçe ve durak detayları
+      doğrulanan verilerle birlikte kademeli olarak eklenecektir.
+    </p>
+    <a href="/iller/" class="btn-primary mt-4 inline-flex">
+      Tüm İlleri Gör ({totals.provinceCount})
+    </a>
+  </section>
+
+  <AdSlotInContent />
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">Son Güncellenen Tarifeler</h2>
+    <div class="mt-6 overflow-x-auto">
+      <table class="w-full min-w-[560px] border-collapse text-left text-sm">
+        <thead>
+          <tr class="border-ink-200 text-ink-500 border-b">
+            <th scope="col" class="py-2 pr-4 font-medium">İl</th>
+            <th scope="col" class="py-2 pr-4 font-medium">Açılış</th>
+            <th scope="col" class="py-2 pr-4 font-medium">Km ücreti</th>
+            <th scope="col" class="py-2 pr-4 font-medium">İndi-bindi</th>
+            <th scope="col" class="py-2 font-medium">Yürürlük</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            recentlyUpdated.map(({ tariff, province }) => (
+              <tr class="border-ink-100 border-b">
+                <td class="py-2 pr-4">
+                  <a
+                    href={`/${province!.slug}-taksi-ucreti/`}
+                    class="text-ink-800 font-medium hover:underline"
+                  >
+                    {province!.name}
+                  </a>
+                </td>
+                <td class="text-ink-600 py-2 pr-4">{formatCurrencyTRY(tariff.openingFee)}</td>
+                <td class="text-ink-600 py-2 pr-4">{formatCurrencyTRY(tariff.pricePerKm)}</td>
+                <td class="text-ink-600 py-2 pr-4">{formatCurrencyTRY(tariff.minimumFare)}</td>
+                <td class="text-ink-500 py-2">{formatDateTR(tariff.validFrom)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">Mesafe Örnekleri</h2>
+    <p class="text-ink-600 mt-1">10 kilometrelik bir yolculuk için tahmini ücretler:</p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+      {
+        sampleCalculations.map(({ province, result }) => (
+          <div class="card">
+            <p class="text-ink-500 text-sm">{locativeOf(province.name)} 10 km taksi</p>
+            <p class="text-ink-900 mt-1 text-2xl font-bold">
+              {formatCurrencyTRY(result.estimatedTotal)}
+            </p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  {
+    airports.length > 0 && (
+      <section class="mx-auto max-w-6xl px-4 py-10">
+        <h2 class="text-ink-900 text-2xl font-bold">Popüler Havalimanları</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {airports.slice(0, 6).map((airport) => (
+            <a href={`/havalimani/${airport.slug}/`} class="card block hover:shadow-md">
+              <p class="text-ink-900 font-semibold">{airport.name}</p>
+              {airport.iataCode && <p class="text-ink-500 text-sm">{airport.iataCode}</p>}
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">Hesaplama Metodolojisi</h2>
+    <p class="text-ink-600 mt-2 max-w-2xl">
+      Tahmini ücret; açılış ücreti, kat edilen mesafe, bekleme süresi ve varsa ek geçiş ücretinin
+      toplanıp ilin minimum ücretiyle karşılaştırılmasıyla hesaplanır.
+    </p>
+    <a
+      href="/rehber/taksi-ucreti-nasil-hesaplanir/"
+      class="text-ink-800 mt-3 inline-block font-medium underline"
+    >
+      Hesaplama yöntemini ayrıntılı okuyun →
+    </a>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">Veri Kaynakları ve Güncellik</h2>
+    <p class="text-ink-600 mt-2 max-w-2xl">
+      Tarifeleri belediye/UKOME kararları ve güvenilir haber kaynaklarından derliyor, her il
+      sayfasında kaynağı ve son kontrol tarihini gösteriyoruz. Kaynağı doğrulanamayan illerde rakam
+      yerine "tarife henüz doğrulanmadı" ibaresi yer alır.
+    </p>
+    <a href="/yasal/veri-kaynaklari/" class="text-ink-800 mt-3 inline-block font-medium underline">
+      Veri kaynakları sayfasına git →
+    </a>
+  </section>
+
+  {
+    guides.length > 0 && (
+      <section class="mx-auto max-w-6xl px-4 py-10">
+        <h2 class="text-ink-900 text-2xl font-bold">Rehber Yazıları</h2>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {guides.map((guide) => (
+            <a href={`/rehber/${guide.id}/`} class="card block hover:shadow-md">
+              <p class="text-ink-900 font-semibold">{guide.data.title}</p>
+              <p class="text-ink-600 mt-1 text-sm">{guide.data.description}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-6xl px-4 py-10">
+    <h2 class="text-ink-900 text-2xl font-bold">Tüm İller</h2>
+    <ul class="mt-6 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 lg:grid-cols-4">
+      {
+        sortedProvinces.map((province) => (
+          <li>
+            <a
+              href={`/${province.slug}-taksi-ucreti/`}
+              class="text-ink-700 hover:text-ink-900 hover:underline"
+            >
+              {province.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</BaseLayout>

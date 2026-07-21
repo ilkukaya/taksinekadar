@@ -1,0 +1,312 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Breadcrumb from "../components/navigation/Breadcrumb.astro";
+import FareCalculator from "../components/calculator/FareCalculator.astro";
+import TariffTable from "../components/tariffs/TariffTable.astro";
+import TariffSummary from "../components/tariffs/TariffSummary.astro";
+import UnverifiedNotice from "../components/common/UnverifiedNotice.astro";
+import SourceNote from "../components/common/SourceNote.astro";
+import AdSlotAfterCalculator from "../components/ads/AdSlotAfterCalculator.astro";
+import AdSlotInContent from "../components/ads/AdSlotInContent.astro";
+import { buildPageMeta, withBrandSuffix } from "../lib/seo/meta";
+import { canonicalUrl } from "../config/site";
+import { getActiveProvinces } from "../lib/repositories/provinces";
+import { getDistrictsByProvince } from "../lib/repositories/districts";
+import {
+  getAllActiveTariffsForProvince,
+  getTariffHistoryForProvince,
+} from "../lib/repositories/tariffs";
+import { getAirportsByProvince } from "../lib/repositories/airports";
+import { getBusTerminalsByProvince } from "../lib/repositories/bus-terminals";
+import { getAllProvincesWithStats } from "../lib/repositories/stats";
+import { formatCurrencyTRY, formatDateTR } from "../lib/utils/format";
+import { locativeOf } from "../lib/language/turkish-suffix";
+import { VEHICLE_TYPE_LABELS } from "../config/vehicle-types";
+import type { Province } from "../lib/validation/schemas";
+
+export function getStaticPaths() {
+  return getActiveProvinces().map((province) => ({
+    params: { provinceTariffSlug: `${province.slug}-taksi-ucreti` },
+    props: { province },
+  }));
+}
+
+const { province } = Astro.props as { province: Province };
+
+const districts = getDistrictsByProvince(province.id);
+const districtById = new Map(districts.map((d) => [d.id, d]));
+
+const allTariffs = getAllActiveTariffsForProvince(province.id);
+const provinceWideTariffs = allTariffs.filter((t) => !t.districtId);
+const districtTariffs = allTariffs.filter((t) => t.districtId);
+const history = getTariffHistoryForProvince(province.id);
+const airports = getAirportsByProvince(province.id);
+const busTerminals = getBusTerminalsByProvince(province.id);
+
+const hasAnyVerifiedTariff = provinceWideTariffs.length > 0 || districtTariffs.length > 0;
+const primaryTariff =
+  provinceWideTariffs.find((t) => t.vehicleType === "yellow") ?? provinceWideTariffs[0];
+
+const sameRegionProvinces = getAllProvincesWithStats()
+  .filter((p) => p.region === province.region && p.id !== province.id)
+  .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+  .slice(0, 12);
+
+const path = `/${province.slug}-taksi-ucreti/`;
+const title = withBrandSuffix(`${province.name} Taksi Ücreti Ne Kadar?`);
+const description = primaryTariff
+  ? `${province.name} taksi ücreti: açılış ${formatCurrencyTRY(primaryTariff.openingFee)}, km ${formatCurrencyTRY(primaryTariff.pricePerKm)}, indi-bindi ${formatCurrencyTRY(primaryTariff.minimumFare)}. Tarife ${formatDateTR(primaryTariff.validFrom)} tarihinde yürürlüğe girmiştir.`
+  : `${province.name} için güncel taksi tarifesi henüz doğrulanmadı. Resmî kaynaklardan doğrulama sağlandığında bu sayfa güncellenecektir.`;
+
+const meta = buildPageMeta({ title, description, path, noindex: !hasAnyVerifiedTariff });
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: canonicalUrl(path),
+  },
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Tarifeler", path: "/tarifeler/" },
+      { name: `${province.name} Taksi Ücreti`, path },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">{province.name} Taksi Ücreti Ne Kadar?</h1>
+
+    <div class="mt-4">
+      {
+        primaryTariff ? (
+          <TariffSummary provinceName={province.name} tariff={primaryTariff} />
+        ) : (
+          <UnverifiedNotice message={`${province.name} için güncel tarife henüz doğrulanmadı.`} />
+        )
+      }
+    </div>
+
+    <div class="mt-8">
+      <FareCalculator preselectedProvinceId={province.id} />
+    </div>
+  </section>
+
+  <AdSlotAfterCalculator />
+
+  {
+    provinceWideTariffs.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">Tarife Tablosu</h2>
+        <div class="mt-4 overflow-x-auto">
+          <table class="w-full min-w-[480px] border-collapse text-left text-sm">
+            <thead>
+              <tr class="border-ink-200 text-ink-500 border-b">
+                <th scope="col" class="py-2 pr-4 font-medium">
+                  Araç türü
+                </th>
+                <th scope="col" class="py-2 pr-4 font-medium">
+                  Açılış
+                </th>
+                <th scope="col" class="py-2 pr-4 font-medium">
+                  Km ücreti
+                </th>
+                <th scope="col" class="py-2 pr-4 font-medium">
+                  İndi-bindi
+                </th>
+                <th scope="col" class="py-2 font-medium">
+                  Bekleme (dk)
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {provinceWideTariffs.map((t) => (
+                <tr class="border-ink-100 border-b">
+                  <td class="text-ink-800 py-2 pr-4 font-medium">
+                    {VEHICLE_TYPE_LABELS[t.vehicleType]}
+                  </td>
+                  <td class="text-ink-600 py-2 pr-4">{formatCurrencyTRY(t.openingFee)}</td>
+                  <td class="text-ink-600 py-2 pr-4">{formatCurrencyTRY(t.pricePerKm)}</td>
+                  <td class="text-ink-600 py-2 pr-4">{formatCurrencyTRY(t.minimumFare)}</td>
+                  <td class="text-ink-600 py-2">
+                    {t.waitingFeePerMinute ? formatCurrencyTRY(t.waitingFeePerMinute) : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    primaryTariff && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">Mesafeye Göre Tahmini Ücret</h2>
+        <p class="text-ink-600 mt-1">
+          {locativeOf(province.name)}{" "}
+          {VEHICLE_TYPE_LABELS[primaryTariff.vehicleType].toLocaleLowerCase("tr-TR")} için mesafeye
+          göre tahmini ücretler:
+        </p>
+        <div class="mt-4">
+          <TariffTable tariff={primaryTariff} />
+        </div>
+      </section>
+    )
+  }
+
+  <AdSlotInContent />
+
+  {
+    districtTariffs.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">İlçe Bazında Farklı Tarife</h2>
+        <p class="text-ink-600 mt-1">
+          Bazı ilçelerde il genelinden farklı, ayrıca doğrulanmış bir tarife uygulanabilir:
+        </p>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          {districtTariffs.map((t) => {
+            const district = t.districtId ? districtById.get(t.districtId) : undefined;
+            return (
+              <div class="card">
+                <p class="text-ink-900 font-semibold">{district?.name ?? t.districtId}</p>
+                <p class="text-ink-600 mt-1 text-sm">
+                  Açılış {formatCurrencyTRY(t.openingFee)} · Km {formatCurrencyTRY(t.pricePerKm)} ·
+                  İndi-bindi {formatCurrencyTRY(t.minimumFare)}
+                </p>
+                <div class="mt-2">
+                  <SourceNote
+                    sourceName={t.sourceName}
+                    sourceUrl={t.sourceUrl}
+                    lastVerifiedAt={t.lastVerifiedAt}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h2 class="text-ink-900 text-xl font-bold">İndi-Bindi ve Bekleme Ücreti</h2>
+    <p class="text-ink-600 mt-2">
+      "İndi-bindi ücreti", bir yolculukta ödenecek minimum tutardır; hesaplanan tutar bu seviyenin
+      altında kalırsa yolcudan minimum ücret tahsil edilir.
+    </p>
+    <a
+      href="/rehber/taksi-indi-bindi-ucreti-nedir/"
+      class="text-ink-800 mt-2 inline-block font-medium underline"
+    >
+      İndi-bindi ücreti hakkında ayrıntılı bilgi →
+    </a>
+  </section>
+
+  {
+    history.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">Geçmiş Tarife Özeti</h2>
+        <ul class="mt-4 space-y-3">
+          {history.map((t) => (
+            <li class="card">
+              <p class="text-ink-700 text-sm">
+                {formatDateTR(t.validFrom)} –{" "}
+                {t.validUntil ? formatDateTR(t.validUntil) : "belirsiz"}: açılış{" "}
+                {formatCurrencyTRY(t.openingFee)}, km {formatCurrencyTRY(t.pricePerKm)}, indi-bindi{" "}
+                {formatCurrencyTRY(t.minimumFare)}
+              </p>
+              <div class="mt-1">
+                <SourceNote sourceName={t.sourceName} sourceUrl={t.sourceUrl} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    primaryTariff && (
+      <section class="mx-auto max-w-3xl px-4 pb-4">
+        <SourceNote
+          sourceName={primaryTariff.sourceName}
+          sourceUrl={primaryTariff.sourceUrl}
+          lastVerifiedAt={primaryTariff.lastVerifiedAt}
+        />
+      </section>
+    )
+  }
+
+  {
+    (airports.length > 0 || busTerminals.length > 0) && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">Havalimanı ve Otogar</h2>
+        <ul class="mt-4 space-y-2">
+          {airports.map((a) => (
+            <li>
+              <a href={`/havalimani/${a.slug}/`} class="text-ink-800 font-medium hover:underline">
+                {a.name}
+              </a>
+            </li>
+          ))}
+          {busTerminals.map((b) => (
+            <li>
+              <a href={`/otogar/${b.slug}/`} class="text-ink-800 font-medium hover:underline">
+                {b.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h2 class="text-ink-900 text-xl font-bold">İlgili Rehberler</h2>
+    <ul class="text-ink-700 mt-4 list-inside list-disc space-y-1">
+      <li>
+        <a href="/rehber/taksi-ucreti-nasil-hesaplanir/" class="hover:text-ink-900 underline">
+          Taksi ücreti nasıl hesaplanır?
+        </a>
+      </li>
+      <li>
+        <a href="/rehber/taksi-acilis-ucreti-nedir/" class="hover:text-ink-900 underline">
+          Taksi açılış ücreti nedir?
+        </a>
+      </li>
+      <li>
+        <a href="/rehber/gece-tarifesi-var-mi/" class="hover:text-ink-900 underline">
+          Gece tarifesi var mı?
+        </a>
+      </li>
+    </ul>
+  </section>
+
+  {
+    sameRegionProvinces.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">{province.region} Bölgesindeki Diğer İller</h2>
+        <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          {sameRegionProvinces.map((p) => (
+            <li>
+              <a
+                href={`/${p.slug}-taksi-ucreti/`}
+                class="text-ink-700 hover:text-ink-900 hover:underline"
+              >
+                {p.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</BaseLayout>

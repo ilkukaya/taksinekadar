@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Taksi Ne Kadar? logosu">
+  <rect width="512" height="512" rx="112" fill="#F5B700" />
+  <rect x="0" y="404" width="512" height="42" fill="#24272D" />
+  <rect x="0" y="404" width="56" height="42" fill="#F5B700" />
+  <rect x="112" y="404" width="56" height="42" fill="#F5B700" />
+  <rect x="224" y="404" width="56" height="42" fill="#F5B700" />
+  <rect x="336" y="404" width="56" height="42" fill="#F5B700" />
+  <rect x="448" y="404" width="64" height="42" fill="#F5B700" />
+  <text
+    x="256"
+    y="300"
+    text-anchor="middle"
+    font-family="Arial, Helvetica, sans-serif"
+    font-weight="700"
+    font-size="300"
+    fill="#24272D"
+  >?</text>
+</svg>

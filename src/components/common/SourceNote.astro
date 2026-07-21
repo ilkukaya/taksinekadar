@@ -1,0 +1,30 @@
+---
+import { formatDateTR } from "../../lib/utils/format";
+
+interface Props {
+  sourceName: string;
+  sourceUrl?: string;
+  lastVerifiedAt?: string;
+}
+
+const { sourceName, sourceUrl, lastVerifiedAt } = Astro.props;
+---
+
+<p class="text-ink-400 text-xs">
+  Kaynak:{" "}
+  {
+    sourceUrl ? (
+      <a
+        href={sourceUrl}
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        class="hover:text-ink-600 underline"
+      >
+        {sourceName}
+      </a>
+    ) : (
+      sourceName
+    )
+  }
+  {lastVerifiedAt && <> · Son kontrol: {formatDateTR(lastVerifiedAt)}</>}
+</p>

@@ -1,0 +1,30 @@
+---
+/** Links out to Google/Yandex Maps search — never an embedded/live map (spec §3, §18.5). */
+interface Props {
+  query: string;
+}
+
+const { query } = Astro.props;
+const encoded = encodeURIComponent(query);
+const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+const yandexMapsUrl = `https://yandex.com/maps/?text=${encoded}`;
+---
+
+<div class="flex flex-wrap gap-2">
+  <a
+    href={googleMapsUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="border-ink-200 text-ink-700 hover:bg-paper-dim inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium"
+  >
+    Google Haritalar'da Aç
+  </a>
+  <a
+    href={yandexMapsUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="border-ink-200 text-ink-700 hover:bg-paper-dim inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium"
+  >
+    Yandex Haritalar'da Aç
+  </a>
+</div>

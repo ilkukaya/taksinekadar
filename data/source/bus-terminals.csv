@@ -1,0 +1,14 @@
+id,name,slug,provinceId,districtId,address,sourceUrl,lastVerifiedAt,status
+istanbul-15-temmuz-demokrasi-otogari,İstanbul 15 Temmuz Demokrasi Otogarı (Esenler Otogarı),istanbul-15-temmuz-demokrasi-otogari,34,34-bayrampasa,,https://www.aa.com.tr/tr/15-temmuz-darbe-girisimi/istanbul-otogarinin-ismi-istanbul-15-temmuz-demokrasi-otogari-oldu/617537,2026-07-21,active
+harem-otogari,Harem Otogarı,harem-otogari,34,34-uskudar,,https://tr.wikipedia.org/wiki/Harem_Oto_Garaj%C4%B1,2026-07-21,active
+asti-ankara,AŞTİ (Ankara Şehirlerarası Terminal İşletmesi),asti-ankara,06,06-yenimahalle,,https://www.ego.gov.tr/tr/sayfa/2116/asti-otogara-ulasim,2026-07-21,active
+izmir-izotas-otogari,İzmir Şehirlerarası Otobüs Terminali (İZOTAŞ),izmir-izotas-otogari,35,35-bornova,,https://tr.wikipedia.org/wiki/%C4%B0zmir_%C5%9Eehirleraras%C4%B1_Otob%C3%BCs_Terminali,2026-07-21,active
+antalya-otogari,Antalya Otogarı (Antalya Şehirlerarası Otobüs Terminali),antalya-otogari,07,07-kepez,,https://www.antalyaulasim.com.tr/Hizmetlerimiz/AntalyaOtogar,2026-07-21,active
+bursa-otogari,Bursa Şehirlerarası ve Uluslararası Otobüs Terminali,bursa-otogari,16,16-osmangazi,,https://tr.wikipedia.org/wiki/Bursa_Otogar%C4%B1,2026-07-21,active
+adana-merkez-otogari,Adana Merkez Otogarı,adana-merkez-otogari,01,01-seyhan,,https://tr.wikipedia.org/wiki/Adana_Merkez_Otogar%C4%B1,2026-07-21,active
+konya-otogari,Konya Şehirlerarası Otobüs Terminali,konya-otogari,42,42-selcuklu,,https://terminal.konya.bel.tr/iletisim,2026-07-21,active
+kayseri-sehir-terminali,Kayseri Şehir Terminali,kayseri-sehir-terminali,38,38-kocasinan,,https://www.neredekal.com/kayseri-otogari-gezilecek-yer-detay/,2026-07-21,active
+gaziantep-otogari,Gaziantep Şehirlerarası Otobüs Terminali,gaziantep-otogari,27,27-sehitkamil,,https://turkiyeturizmansiklopedisi.com/gaziantep-sehirlerarasi-otobus-terminali,2026-07-21,active
+samsun-otogari,Yusuf Ziya Yılmaz Samsun Şehirlerarası Otobüs Terminali,samsun-otogari,55,55-ilkadim,,https://www.neredekal.com/samsun-otogari-gezilecek-yer-detay/,2026-07-21,active
+trabzon-yeni-otogar,Trabzon Şehirlerarası Otobüs Terminali (Yeni Otogar),trabzon-yeni-otogar,61,61-ortahisar,,https://www.aa.com.tr/tr/gundem/trabzonda-yapimi-tamamlanan-yeni-otogar-bu-gece-hizmete-aciliyor/3029307,2026-07-21,active
+mersin-otogari,Mersin Otogarı,mersin-otogari,33,33-toroslar,,https://www.neredennereye.com/otogar/mersin/,2026-07-21,active

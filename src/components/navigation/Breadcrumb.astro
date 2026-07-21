@@ -1,0 +1,33 @@
+---
+import { buildBreadcrumbSchema, type BreadcrumbItem } from "../../lib/schema/breadcrumb";
+import JsonLd from "../structured-data/JsonLd.astro";
+
+interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+const schema = buildBreadcrumbSchema(items);
+---
+
+<nav aria-label="Breadcrumb" class="text-ink-500 mx-auto max-w-6xl px-4 pt-4 text-sm">
+  <ol class="flex flex-wrap items-center gap-1">
+    {
+      items.map((item, index) => (
+        <li class="flex items-center gap-1">
+          {index > 0 && <span aria-hidden="true">/</span>}
+          {index === items.length - 1 ? (
+            <span class="text-ink-700" aria-current="page">
+              {item.name}
+            </span>
+          ) : (
+            <a href={item.path} class="hover:text-ink-800 hover:underline">
+              {item.name}
+            </a>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+<JsonLd data={schema} />

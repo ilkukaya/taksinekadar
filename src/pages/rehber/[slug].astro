@@ -1,0 +1,100 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import SourceNote from "../../components/common/SourceNote.astro";
+import AdSlotInContent from "../../components/ads/AdSlotInContent.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { canonicalUrl } from "../../config/site";
+import { getCollection, getEntry, render } from "astro:content";
+import { formatDateTR } from "../../lib/utils/format";
+
+export async function getStaticPaths() {
+  const guides = await getCollection("rehber");
+  return guides.map((guide) => ({
+    params: { slug: guide.id },
+    props: { guide },
+  }));
+}
+
+const { guide } = Astro.props;
+const { Content } = await render(guide);
+
+const relatedEntries = (
+  await Promise.all(guide.data.relatedGuides.map((id: string) => getEntry("rehber", id)))
+).filter((entry): entry is NonNullable<typeof entry> => entry !== undefined);
+
+const path = `/rehber/${guide.id}/`;
+
+const meta = buildPageMeta({
+  title: guide.data.title,
+  description: guide.data.description,
+  path,
+});
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: guide.data.title,
+    description: guide.data.description,
+    datePublished: guide.data.publishedAt,
+    dateModified: guide.data.updatedAt,
+    url: canonicalUrl(path),
+  },
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Rehber", path: "/rehber/" },
+      { name: guide.data.title, path },
+    ]}
+  />
+
+  <article class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">{guide.data.title}</h1>
+    <p class="text-ink-500 mt-2 text-sm">
+      Yayın tarihi: {formatDateTR(guide.data.publishedAt)} · Güncelleme: {
+        formatDateTR(guide.data.updatedAt)
+      }
+    </p>
+
+    <div class="article-content mt-6">
+      <Content />
+    </div>
+
+    <div class="border-ink-100 bg-paper-dim text-ink-600 mt-8 rounded-xl border p-4 text-sm">
+      <p class="text-ink-800 font-medium">Editör notu</p>
+      <p class="mt-1">{guide.data.editorNote}</p>
+    </div>
+
+    <div class="mt-4">
+      <SourceNote
+        sourceName={guide.data.sourceName}
+        sourceUrl={guide.data.sourceUrl}
+        lastVerifiedAt={guide.data.updatedAt}
+      />
+    </div>
+  </article>
+
+  <AdSlotInContent />
+
+  {
+    relatedEntries.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <h2 class="text-ink-900 text-xl font-bold">İlgili Rehberler</h2>
+        <ul class="text-ink-700 mt-4 list-inside list-disc space-y-1">
+          {relatedEntries.map((entry) => (
+            <li>
+              <a href={`/rehber/${entry.id}/`} class="hover:text-ink-900 underline">
+                {entry.data.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</BaseLayout>
