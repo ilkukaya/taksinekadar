@@ -34,7 +34,7 @@ Bu ilk teslimat **Faz 1 ve ötesinde bazı Faz 3 unsurlarını** kapsar:
 | Taksi ücreti hesaplama motoru (client-side) | ✅ Tamamlandı                                                    |
 | 81 il hub + il tarife sayfaları             | ✅ Tamamlandı                                                    |
 | 973 ilçe referans verisi                    | ✅ Tamamlandı (yalnızca veri; ilçe sayfaları henüz yok)          |
-| Doğrulanmış büyükşehir tarifeleri           | ✅ 15 il + Alanya/Gazipaşa ilçe tarifesi — aşağıya bakın         |
+| Doğrulanmış il tarifeleri                   | ✅ 41 il + Alanya/Gazipaşa/Cide ilçe tarifesi — aşağıya bakın    |
 | Havalimanı ve otogar sayfaları              | ✅ Tamamlandı (plan Faz 3'tü, veri hazır olduğu için öne alındı) |
 | Rehber (SSS) içerikleri                     | ✅ 7 makale                                                      |
 | Popüler rotalar                             | ⚠️ Kısmi — 3 doğrulanmış güzergâh yayında, aşağıya bakın         |
@@ -55,19 +55,35 @@ kasıtlı olarak yayınlanmadı; bkz. bölüm 2.2.
 
 ## 2. Doğrulanmış Tarife Durumu
 
-Aşağıdaki 15 il için resmî/haber kaynaklı, tarihli ve kaynak bağlantılı tarife yayındadır:
+Aşağıdaki 41 il için resmî/haber kaynaklı, tarihli ve kaynak bağlantılı tarife yayındadır:
 İstanbul, Ankara, İzmir, Adana, Mersin, Gaziantep, Konya, Kayseri, Samsun, Trabzon, Antalya
-(il geneli), Bursa, Kocaeli, Muğla, Balıkesir. Ayrıca Antalya iline bağlı Alanya ve Gazipaşa
-ilçeleri için ilçe bazlı ayrı bir tarife de yayındadır (il geneli tarifeden farklı olduğu için).
+(il geneli), Bursa, Kocaeli, Muğla, Balıkesir, Çorum, Diyarbakır, Giresun, Malatya, Sakarya,
+Siirt, Zonguldak, Bayburt, Kırıkkale, Bartın, Yalova, Düzce, Denizli, Edirne, Elazığ, Hakkari,
+Kırklareli, Osmaniye, Erzincan, Erzurum, Nevşehir, Niğde, Kars, Ardahan, Afyonkarahisar, Artvin.
+Ayrıca Antalya'ya bağlı Alanya/Gazipaşa ve Kastamonu'ya bağlı Cide ilçeleri için ayrı, il
+genelinden farklı ilçe tarifeleri yayındadır (Kastamonu merkez için ise henüz doğrulanmış bir
+tarih bulunamadığından il geneli tarife hâlâ "doğrulanmadı" durumundadır — yalnızca Cide
+ilçesi doğrulanmıştır).
+
+Kullanıcı isteği üzerine bu turda `taksi724.com` ve `taksimetrem.com.tr` özellikle denendi;
+ancak WebSearch üzerinden hiçbir ilde gerçek bir sayısal tarife döndürmediler (yalnızca genel
+şablon metni — bazen büyükşehir olmayan illeri yanlışlıkla "büyükşehir belediyesi" olarak bile
+tanımlayan hatalı, şehre özel olmayan sentezler). Bu yüzden bu iki site **veri kaynağı olarak
+kullanılamadı**; tüm yeni tarifeler bunun yerine adı geçen yerel/ulusal haber kaynaklarından
+gelmektedir — spesifikasyonun "asla uydurma" kuralına daha uygun bir sonuç. Araştırma sırasında
+düzinelerce il için de birbiriyle çelişen, bariz bayat (2022-2024 verisi 2026 diye sunulan) veya
+başka bir ile ait olduğu tespit edilen rakamlar bulundu; bunların hiçbiri yayınlanmadı.
 
 Bu ortamda WebFetch neredeyse her haber/kurum sitesinde 403 ile engellendiğinden, tüm tarifeler
 WebSearch'ün kendi sentezlediği sonuçlara dayanır — doğrudan sayfa getirme (fetch) ile teyit
 edilmemiştir. Bunu telafi etmek için her rakam, en az 2-3 bağımsız isimli haber kaynağı
 (mümkün olduğunda AA/DHA gibi ajans kaynakları) arasında karşılaştırılarak doğrulanmış, tek bir
 jenerik "taksi hesaplama" sitesine güvenilmemiştir. Güven puanları (`confidenceScore`) bu
-doğrulama derinliğini yansıtır; 81 ilin geri kalanı için henüz doğrulanmış bir tarife yoktur ve
-bu iller sitede **rakam göstermez** — "tarife henüz doğrulanmadı" ibaresiyle sunulur ve ilgili
-tarife sayfası `noindex` işaretlenir.
+doğrulama derinliğini yansıtır; bazı illerde yürürlük tarihi yalnızca ay düzeyinde bilinmektedir
+(bu satırlarda ayın 15'i varsayılan olarak işaretlenmiş ve `sourceDocument` alanında açıkça
+belirtilmiştir — rakamların kendisi doğrulanmıştır, yalnızca kesin gün belirsizdir). 81 ilin geri
+kalan 40'ı için henüz doğrulanmış bir tarife yoktur ve bu iller sitede **rakam göstermez** —
+"tarife henüz doğrulanmadı" ibaresiyle sunulur ve ilgili tarife sayfası `noindex` işaretlenir.
 
 Tüm tarife kaynakları, yürürlük tarihleri ve güven puanları `data/source/tariffs.csv` ve
 `data/source/tariff-history.csv` dosyalarında satır satır görülebilir.
@@ -251,6 +267,6 @@ pnpm check       # astro check (TypeScript + Astro şablon denetimi)
 ## 10. Yayın Öncesi Kontrol Listesi
 
 Bkz. proje talimatının 41. bölümü. Bu teslimatta henüz karşılanmayan maddeler: durak verisi,
-ilçe sayfaları, hastane/AVM kümeleri, kalan 5 popüler rota (bkz. 2.2), Lighthouse ölçümü
-(gerçek bir deploy sonrası yapılmalı). Antalya/Bursa/Kocaeli/Muğla/Balıkesir tarife doğrulaması
-ve sabit hat alan kodları artık tamamlandı.
+ilçe sayfaları, hastane/AVM kümeleri, kalan 5 popüler rota (bkz. 2.2), kalan 40 ilin tarife
+doğrulaması (bkz. bölüm 2), Lighthouse ölçümü (gerçek bir deploy sonrası yapılmalı). Sabit hat
+alan kodları tamamlandı.
