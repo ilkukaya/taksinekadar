@@ -1,11 +1,14 @@
-# Deploys are pushed pre-built from GitHub Actions via `netlify deploy --prod --dir=dist`
-# (see .github/workflows/deploy.yml and refresh-data.yml). Netlify itself must NOT build on
-# git push — in the Netlify dashboard, disable "Stop builds" / auto publishing for this site
-# (Site configuration → Build & deploy → Stop builds), since this file alone cannot turn off
-# Netlify's git-triggered auto-build.
+# Netlify builds and deploys directly on every push (no GitHub Actions in the loop) —
+# there's no scheduled/external data pipeline yet that would need a separate CI job, so
+# Netlify's own build is the whole pipeline. The command still gates deploys on data
+# integrity and unit tests; `pnpm build` itself fails on broken links, orphan pages, or
+# duplicate titles/descriptions (see scripts/audit-internal-links.ts).
 [build]
   publish = "dist"
-  command = "true"
+  command = "pnpm data:validate && pnpm test && pnpm build"
+
+[build.environment]
+  NODE_VERSION = "22"
 
 [[headers]]
   for = "/sitemaps/*.xml"

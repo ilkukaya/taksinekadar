@@ -107,8 +107,12 @@ yapılmasını ve bunun burada belirtilmesini istiyor. Yapılan varsayımlar:
 - **Test:** Vitest (birim) + Playwright (e2e)
 - **Paket yöneticisi:** pnpm
 - **Kod kalitesi:** ESLint (flat config) + Prettier
-- **Build:** GitHub Actions
-- **Deploy:** Netlify CLI (Netlify'ın kendi otomatik build'i kapalı olmalı — bkz. `netlify.toml`)
+- **Build ve deploy:** Netlify, git push'ta kendi build'ini çalıştırır (bkz. `netlify.toml`) —
+  komut `pnpm data:validate && pnpm test && pnpm build` olduğundan veri hatası, başarısız test
+  veya kırık link/orphan sayfa varsa deploy gerçekleşmez. Ayrı bir GitHub Actions deploy
+  workflow'u yok; şu an düzenli/otomatik çekilen bir veri kaynağı olmadığından buna gerek
+  görülmedi. `.github/workflows/seo-audit.yml` yalnızca pull request'lerde lint/test/build
+  çalıştıran, secret gerektirmeyen bir kontrol katmanıdır.
 
 Sayfaların büyük çoğunluğu sıfır JavaScript ile çalışır. JavaScript yalnızca hesaplama aracında,
 site içi aramada ve reklam script'lerinde (yalnızca yayıncı kimliği tanımlıysa) kullanılır.
@@ -194,12 +198,11 @@ kodla yazılmıştır ve doğru mimariye sahiptir, ancak:
 
 ## 8. Ortam Değişkenleri
 
-| Değişken                                | Amaç                                                               |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| `PUBLIC_ADSENSE_PUB_ID`                 | AdSense yayıncı kimliği (tanımsızsa reklam alanları boş yer tutar) |
-| `INDEXNOW_KEY`                          | IndexNow anahtarı (tanımsızsa bildirim atlanır)                    |
-| `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` | GitHub Actions'tan Netlify CLI deploy için                         |
-| `OSM_PBF_PATH`                          | Faz 2 OSM import script'i için yerel PBF dosya yolu                |
+| Değişken                | Amaç                                                                                                                                            |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PUBLIC_ADSENSE_PUB_ID` | AdSense yayıncı kimliği. **Netlify'da** Site configuration → Environment variables'a eklenmeli (tanımsızsa reklam alanları hiç render edilmez). |
+| `INDEXNOW_KEY`          | IndexNow anahtarı; yalnızca `pnpm indexnow:submit` elle çalıştırıldığında kullanılır (tanımsızsa atlanır).                                      |
+| `OSM_PBF_PATH`          | Faz 2 OSM import script'i için yerel PBF dosya yolu.                                                                                            |
 
 ---
 
