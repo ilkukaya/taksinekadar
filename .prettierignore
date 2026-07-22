@@ -8,4 +8,5 @@ data/reports/
 public/sitemaps/
 public/sitemap-index.xml
 public/search-index.json
+data/raw/
 CHANGELOG.md

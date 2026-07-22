@@ -1,0 +1,131 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import FareCalculator from "../../components/calculator/FareCalculator.astro";
+import SourceNote from "../../components/common/SourceNote.astro";
+import UnverifiedNotice from "../../components/common/UnverifiedNotice.astro";
+import AdSlotAfterCalculator from "../../components/ads/AdSlotAfterCalculator.astro";
+import { buildPageMeta, withBrandSuffix } from "../../lib/seo/meta";
+import { canonicalUrl } from "../../config/site";
+import { getActivePopularRoutes } from "../../lib/repositories/popular-routes";
+import { getProvinceById } from "../../lib/repositories/provinces";
+import { getActiveTariff } from "../../lib/repositories/tariffs";
+import { calculateFare } from "../../lib/calculation/fare-calculator";
+import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
+import type { PopularRoute } from "../../lib/validation/schemas";
+
+/** PopularRouteSchema has no sourceName field (only sourceType + sourceUrl) — SourceNote
+ * needs a display label, so sourceType is translated here rather than in the shared config
+ * since it's only used on this one page. */
+const SOURCE_TYPE_LABELS: Record<string, string> = {
+  official: "Resmî kurum sayfası referanslı haber taraması",
+  manual: "Bağımsız haber kaynaklarının karşılaştırılmasıyla doğrulama",
+  "open-data": "Açık veri kaynağı",
+};
+
+export function getStaticPaths() {
+  return getActivePopularRoutes().map((route) => ({
+    params: { route: route.slug },
+    props: { route },
+  }));
+}
+
+const { route } = Astro.props as { route: PopularRoute };
+const province = getProvinceById(route.provinceId);
+const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
+const fare = tariff ? calculateFare(tariff, { distanceKm: route.distanceKm }) : undefined;
+
+const path = `/rota/${route.slug}/`;
+const title = withBrandSuffix(`${route.originName} - ${route.destinationName} Taksi Ücreti`);
+const description = `${route.originName} ile ${route.destinationName} arası ${route.distanceKm} km yol mesafesi ve güncel tahmini taksi ücreti.`;
+
+const meta = buildPageMeta({ title, description, path });
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: title,
+    description,
+    url: canonicalUrl(path),
+  },
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Popüler Rotalar", path: "/rota/" },
+      { name: `${route.originName} - ${route.destinationName}`, path },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">
+      {route.originName} — {route.destinationName}
+    </h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      Yol mesafesi yaklaşık <strong>{route.distanceKm} km</strong>.
+      {route.tollFee === 0 && " Bu güzergâhta köprü veya ücretli otoyol geçişi bulunmamaktadır."}
+      {
+        route.tollFee !== undefined && route.tollFee > 0 && (
+          <>
+            {" "}
+            Bu güzergâhta yaklaşık {formatCurrencyTRY(route.tollFee)} köprü/otoyol geçiş ücreti
+            uygulanabilir.
+          </>
+        )
+      }
+    </p>
+
+    {
+      fare ? (
+        <div class="card mt-6">
+          <p class="text-ink-500 text-sm">Tahmini taksi ücreti (sarı taksi, güncel tarifeyle)</p>
+          <p class="text-ink-900 mt-1 text-3xl font-bold">
+            {formatCurrencyTRY(fare.estimatedTotal)}
+          </p>
+          <p class="text-ink-500 mt-2 text-xs">
+            Açılış ücreti {formatCurrencyTRY(fare.openingFee)} + {route.distanceKm} km ×{" "}
+            {formatCurrencyTRY(fare.pricePerKm)} üzerinden hesaplanmıştır; bekleme süresi ve
+            köprü/otoyol geçiş ücreti bu tutara dahil değildir. Tarife{" "}
+            {formatDateTR(fare.validFrom)} tarihinden itibaren geçerlidir.
+          </p>
+        </div>
+      ) : (
+        <div class="mt-4">
+          <UnverifiedNotice
+            message={`${province?.name ?? "Bu il"} için güncel taksi tarifesi henüz doğrulanmadı.`}
+          />
+        </div>
+      )
+    }
+
+    {route.notes && <p class="text-ink-500 mt-6 text-sm">{route.notes}</p>}
+
+    <div class="mt-8">
+      <FareCalculator preselectedProvinceId={province?.id} />
+    </div>
+  </section>
+
+  <AdSlotAfterCalculator />
+
+  {
+    province && (
+      <section class="mx-auto max-w-3xl px-4 py-10">
+        <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">
+          {province.name} taksi ücreti sayfasına git →
+        </a>
+      </section>
+    )
+  }
+
+  <section class="mx-auto max-w-3xl px-4 pb-10">
+    <SourceNote
+      sourceName={SOURCE_TYPE_LABELS[route.sourceType] ?? "Kaynak"}
+      sourceUrl={route.sourceUrl}
+      lastVerifiedAt={route.lastVerifiedAt}
+    />
+  </section>
+</BaseLayout>

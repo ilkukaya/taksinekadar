@@ -36,10 +36,28 @@ const meta = buildPageMeta({
     <h2 class="text-ink-900 mt-10 text-xl font-bold">İl ve İlçe Sınırları</h2>
     <p class="text-ink-600 mt-2">
       81 il ve {totals.districtCount} ilçe verisi, birbirinden bağımsız kamuya açık il/ilçe referans veri
-      kümeleri karşılaştırılarak derlenmiştir. Plaka kodu, bölge ve eski isim (varsa) bilgileri bu karşılaştırmayla
-      teyit edilmiştir. Enlem/boylam ve sabit hat alan kodu gibi bazı alanlar, bu sitenin hiçbir özelliği
-      için henüz zorunlu olmadığından ve tarafımızca canlı olarak teyit edilemediğinden şu an boş bırakılmıştır;
-      ileride resmî kaynaklarla doğrulanarak eklenecektir.
+      kümeleri karşılaştırılarak derlenmiştir. Plaka kodu, bölge, sabit hat alan kodu ve eski isim (varsa)
+      bilgileri bu karşılaştırmayla teyit edilmiştir. Enlem/boylam gibi bazı alanlar, bu sitenin hiçbir
+      özelliği için henüz zorunlu olmadığından şu an boş bırakılmıştır; ileride resmî kaynaklarla doğrulanarak
+      eklenecektir.
+    </p>
+    <p class="text-ink-600 mt-2">
+      İl sınırları ayrıca gerçek coğrafi poligon verisiyle çapraz kontrol edilir: taksi durağı gibi
+      koordinatlı kayıtların, kayıtlı oldukları ilin sınırları içinde olup olmadığı
+      <a
+        href="https://github.com/izzetkalic/geojsons-of-turkey"
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        class="text-ink-800 underline">geojsons-of-turkey</a
+      > adlı, OpenStreetMap verisinden türetilmiş ve
+      <a
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+        class="text-ink-800 underline">ODbL</a
+      > lisansı altında paylaşılan bir il sınırı veri setiyle otomatik olarak (nokta-içinde-poligon testiyle)
+      doğrulanır (`scripts/validate-geography.ts`). Harita verisi © OpenStreetMap katkıda bulunanlar,
+      ODbL ile lisanslıdır.
     </p>
 
     <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Tarifeleri</h2>
@@ -53,9 +71,8 @@ const meta = buildPageMeta({
       {unverified.map((p) => <li>{p.name}</li>)}
     </ul>
     <p class="text-ink-500 mt-3 text-sm">
-      Bu illerin bir kısmı (Antalya il geneli, Bursa, Kocaeli, Muğla, Balıkesir) için araştırma bu
-      oturumda erişim kısıtları nedeniyle tamamlanamamıştır; bir sonraki veri güncellemesinde
-      yeniden ele alınacaktır.
+      Bu iller için araştırma henüz tamamlanamamıştır; bir sonraki veri güncellemesinde
+      önceliklendirilecektir.
     </p>
 
     <h2 class="text-ink-900 mt-10 text-xl font-bold">Havalimanı ve Otogar</h2>
@@ -63,6 +80,16 @@ const meta = buildPageMeta({
       Havalimanı ve otogar sayfalarındaki il/ilçe ve konum bilgileri DHMİ (Devlet Hava Meydanları
       İşletmesi), ilgili işletmecilerin resmî siteleri ve Wikipedia gibi kamuya açık kaynaklar
       karşılaştırılarak derlenmiştir; her sayfada ilgili kaynak bağlantısı verilir.
+    </p>
+
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">Popüler Rotalar</h2>
+    <p class="text-ink-600 mt-2">
+      Havalimanından şehir merkezine popüler güzergâhlarda gösterilen yol mesafesi, yalnızca isimli
+      ve kontrol edilebilir bir kaynaktan (haber kuruluşu veya resmî kurum sayfası)
+      doğrulanabildiğinde yayınlanır. Kaynaklar arasında çelişki varsa veya tek kaynak jenerik bir
+      mesafe hesaplayıcısıysa, o güzergâh hiç yayınlanmaz — hatalı bir mesafe göstermektense hiç
+      göstermemeyi tercih ederiz. Her rota sayfasında kaynak bağlantısı ve son kontrol tarihi ayrıca
+      belirtilir.
     </p>
 
     <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Durakları (Yakında)</h2>

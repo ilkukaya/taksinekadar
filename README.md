@@ -34,35 +34,69 @@ Bu ilk teslimat **Faz 1 ve ötesinde bazı Faz 3 unsurlarını** kapsar:
 | Taksi ücreti hesaplama motoru (client-side) | ✅ Tamamlandı                                                    |
 | 81 il hub + il tarife sayfaları             | ✅ Tamamlandı                                                    |
 | 973 ilçe referans verisi                    | ✅ Tamamlandı (yalnızca veri; ilçe sayfaları henüz yok)          |
-| Doğrulanmış büyükşehir tarifeleri           | ⚠️ Kısmi — aşağıya bakın                                         |
+| Doğrulanmış büyükşehir tarifeleri           | ✅ 15 il + Alanya/Gazipaşa ilçe tarifesi — aşağıya bakın         |
 | Havalimanı ve otogar sayfaları              | ✅ Tamamlandı (plan Faz 3'tü, veri hazır olduğu için öne alındı) |
 | Rehber (SSS) içerikleri                     | ✅ 7 makale                                                      |
+| Popüler rotalar                             | ⚠️ Kısmi — 3 doğrulanmış güzergâh yayında, aşağıya bakın         |
+| İl sınırı doğrulaması (gerçek OSM poligonu) | ✅ Tamamlandı — bkz. bölüm 7                                     |
 | Taksi durağı verisi (OSM + belediye)        | ❌ Faz 2 — bilinçli olarak ertelendi                             |
 | İlçe ve durak sayfaları                     | ❌ Faz 2 — durak verisi olmadan boş sayfa üretilmedi             |
-| Popüler rotalar                             | ❌ Faz 3 — doğrulanmış mesafe verisi yok                         |
 | Hastane/AVM kümeleri                        | ❌ Faz 4                                                         |
 
 **Neden bu sınır?** Proje talimatı açıkça "bilmediğin tarifeyi, telefonu, adresi... asla
 uydurma" diyor. Taksi durağı verisi gerçek bir OSM/Geofabrik PBF indirmesi veya belediye açık
-veri portalı erişimi gerektirir; bu oturumda böyle bir veri seti işlenmediği için tek bir sahte
-durak kaydı bile eklenmedi. Aynı ilke rotalar ve hastane/AVM kümeleri için de geçerli.
+veri portalı erişimi gerektirir; bu ortamda o iki kaynak da erişilebilir değil (bkz. bölüm 2.1),
+bu yüzden tek bir sahte durak kaydı bile eklenmedi. Aynı ilke hastane/AVM kümeleri için de
+geçerli. Popüler rotalarda ise mesafesi güvenilir, isimli bir kaynaktan doğrulanamayan
+güzergâhlar (örn. İstanbul Havalimanı ↔ Taksim — kaynaklar 35-53 km arasında çelişiyor)
+kasıtlı olarak yayınlanmadı; bkz. bölüm 2.2.
 
 ---
 
 ## 2. Doğrulanmış Tarife Durumu
 
-Aşağıdaki 10 il için resmî/haber kaynaklı, tarihli ve kaynak bağlantılı tarife yayındadır:
-İstanbul, Ankara, İzmir, Adana, Mersin, Gaziantep, Konya, Kayseri, Samsun, Trabzon. Ayrıca
-Antalya iline bağlı Alanya ve Gazipaşa ilçeleri için ilçe bazlı ayrı bir tarife de yayındadır.
+Aşağıdaki 15 il için resmî/haber kaynaklı, tarihli ve kaynak bağlantılı tarife yayındadır:
+İstanbul, Ankara, İzmir, Adana, Mersin, Gaziantep, Konya, Kayseri, Samsun, Trabzon, Antalya
+(il geneli), Bursa, Kocaeli, Muğla, Balıkesir. Ayrıca Antalya iline bağlı Alanya ve Gazipaşa
+ilçeleri için ilçe bazlı ayrı bir tarife de yayındadır (il geneli tarifeden farklı olduğu için).
 
-**Doğrulanamayan iller:** Antalya (il geneli), Bursa, Kocaeli, Muğla, Balıkesir. Bu oturumda
-web araştırma bütçesi (WebSearch) tükendiği ve WebFetch birçok kaynakta 403 ile engellendiği
-için bu 5 il için güvenilir doğrulama tamamlanamadı. Bu iller sitede **rakam göstermez**;
-"tarife henüz doğrulanmadı" ibaresiyle sunulur ve ilgili tarife sayfası `noindex` işaretlenir.
-Bir sonraki `pnpm data:validate` + araştırma turunda bu iller önceliklendirilmelidir.
+Bu ortamda WebFetch neredeyse her haber/kurum sitesinde 403 ile engellendiğinden, tüm tarifeler
+WebSearch'ün kendi sentezlediği sonuçlara dayanır — doğrudan sayfa getirme (fetch) ile teyit
+edilmemiştir. Bunu telafi etmek için her rakam, en az 2-3 bağımsız isimli haber kaynağı
+(mümkün olduğunda AA/DHA gibi ajans kaynakları) arasında karşılaştırılarak doğrulanmış, tek bir
+jenerik "taksi hesaplama" sitesine güvenilmemiştir. Güven puanları (`confidenceScore`) bu
+doğrulama derinliğini yansıtır; 81 ilin geri kalanı için henüz doğrulanmış bir tarife yoktur ve
+bu iller sitede **rakam göstermez** — "tarife henüz doğrulanmadı" ibaresiyle sunulur ve ilgili
+tarife sayfası `noindex` işaretlenir.
 
 Tüm tarife kaynakları, yürürlük tarihleri ve güven puanları `data/source/tariffs.csv` ve
 `data/source/tariff-history.csv` dosyalarında satır satır görülebilir.
+
+### 2.1 Taksi durağı / POI veri kaynağı erişilebilirliği
+
+Bu ortamın ağ ilkesi altında `overpass-api.de` (OSM Overpass API) ve büyükşehir belediyelerinin
+açık veri portalları (örn. `data.ibb.gov.tr`) bağlantı düzeyinde engellidir (proxy `403 connect
+rejected` döndürür, yeniden denemeyle aşılamaz — kod veya kimlik doğrulama sorunu değildir).
+Bu nedenle gerçek bir taksi durağı veri seti bu oturumda indirilemedi/işlenemedi; bölüm 1'deki
+"Faz 2 ertelendi" kararı budur. Araştırma sırasında yan bir kazanım olarak, GitHub üzerinden
+LFS ile servis edilen bağımsız bir OSM türevi veri seti (`izzetkalic/geojsons-of-turkey`,
+ODbL) erişilebilir olduğu için il sınırı poligonları elde edildi ve
+`scripts/validate-geography.ts`'e gerçek nokta-içinde (point-in-polygon) doğrulaması olarak
+entegre edildi — bkz. bölüm 7 ve `/yasal/veri-kaynaklari/`.
+
+### 2.2 Popüler rotalar
+
+`/rota/` altında yalnızca yol mesafesi isimli, kontrol edilebilir bir kaynaktan doğrulanan 3
+güzergâh yayındadır: Antalya Havalimanı ↔ Antalya Merkezi (13 km), Milas-Bodrum Havalimanı ↔
+Bodrum Merkezi (36 km), Trabzon Havalimanı ↔ Trabzon Merkezi (7 km). Araştırılan diğer 5
+güzergâh (İstanbul Havalimanı ↔ Taksim, Sabiha Gökçen ↔ Kadıköy, Esenboğa ↔ Kızılay, Adnan
+Menderes ↔ Konak, Kayseri Havalimanı ↔ merkez) kasıtlı olarak **yayınlanmadı**: kaynaklar
+arasında ya gerçek bir çelişki var (İstanbul Havalimanı-Taksim için İETT 50 km derken haber
+sentezi 40 km diyor), ya tek kaynak jenerik bir mesafe hesaplayıcısıydı (güvenilmez sınıf), ya
+da net bir km rakamı yerine yalnızca belirsiz bir "yaklaşık" ifadesi bulunabildi. Bir sonraki
+araştırma turunda bu 5 güzergâh için tek, savunulabilir bir rakama ulaşmak üzere elle (bir kerelik)
+bir harita/rota sorgusu yapılması önerilir — spesifikasyonun yasakladığı şey canlı bir routing
+API'sine **sitede** bağımlı kalmaktır, tek seferlik insan doğrulaması değil.
 
 ---
 
@@ -71,28 +105,24 @@ Tüm tarife kaynakları, yürürlük tarihleri ve güven puanları `data/source/
 Proje talimatı, eksik bilgi projeyi durdurmuyorsa güvenli ve geri alınabilir bir varsayım
 yapılmasını ve bunun burada belirtilmesini istiyor. Yapılan varsayımlar:
 
-1. **Sabit hat alan kodları (`landlineAreaCodes`) boş bırakıldı.** Bu oturumda canlı doğrulama
-   yapılamadığı için (WebSearch/WebFetch erişimi tükendi), hiçbir ile alan kodu ataması
-   yapılmadı. Şu an bu alanı kullanan bir doğrulama akışı yok (durak verisi henüz yok); telefon
-   doğrulama devreye girmeden önce BTK numaralandırma planına karşı doldurulmalıdır.
-2. **İlçe `officialCode` alanı, resmî bir devlet kaydı olduğu iddiası taşımaz.** Birbirinden
+1. **İlçe `officialCode` alanı, resmî bir devlet kaydı olduğu iddiası taşımaz.** Birbirinden
    bağımsız iki kamuya açık il/ilçe veri kümesi karşılaştırılarak derlenmiş dahili, stabil bir
    koddur; join/routing için güvenilirdir ama TÜİK/NVİ resmî ilçe koduyla bire bir eşleştiği
    ayrıca teyit edilmemiştir.
-3. **Araç türü olarak varsayılan `yellow` (sarı taksi) tüm illerde kullanıldı**, yalnızca
+2. **Araç türü olarak varsayılan `yellow` (sarı taksi) tüm illerde kullanıldı**, yalnızca
    İstanbul'a özgü bir etiket olarak değil — Türkiye genelinde ticari taksilerin sarı renkte
    olması yaygın pratik olduğundan, hesaplama aracının varsayılan seçimiyle tutarlı olsun diye
    bu şekilde modellendi. İstanbul'un turkuaz ve 8+1 segmentleri ayrıca `turquoise` /
    `eight-plus-one` olarak eklendi.
-4. **Trabzon'un kademeli (0-5 km / 5 km üzeri) kilometre ücreti tek bir orana indirgendi**
+3. **Trabzon'un kademeli (0-5 km / 5 km üzeri) kilometre ücreti tek bir orana indirgendi**
    (5 km üzeri oranı kullanıldı) çünkü veri modeli tek bir `pricePerKm` alanı öngörüyor;
    asıl kademeli yapı `sourceDocument` alanında not edilmiştir.
-5. **Bölge sınıflandırması** klasik "7 coğrafi bölge" sistemine göre yapılmıştır (Marmara, Ege,
+4. **Bölge sınıflandırması** klasik "7 coğrafi bölge" sistemine göre yapılmıştır (Marmara, Ege,
    Akdeniz, İç Anadolu, Karadeniz, Doğu Anadolu, Güneydoğu Anadolu) — TÜİK'in İBBS (NUTS)
    bölgeleri değil, halk arasında yaygın kullanılan klasik sistemdir.
-6. **İl/ilçe enlem-boylam alanları boş bırakıldı.** Site hiçbir gömülü/canlı harita
+5. **İl/ilçe enlem-boylam alanları boş bırakıldı.** Site hiçbir gömülü/canlı harita
    kullanmadığından bu alanlar şu an işlevsel değildir; ileride gerçek kaynaklarla doldurulabilir.
-7. **AdSense yayıncı kimliği (`PUBLIC_ADSENSE_PUB_ID`) yapılandırılmadı.** Reklam bileşenleri
+6. **AdSense yayıncı kimliği (`PUBLIC_ADSENSE_PUB_ID`) yapılandırılmadı.** Reklam bileşenleri
    tamamen hazır ve CLS yaratmayacak şekilde yer ayırıyor, ancak env değişkeni tanımlanana kadar
    hiçbir reklam scripti veya sahte yayıncı kimliği yüklenmez.
 
@@ -150,6 +180,7 @@ tests/e2e/         Playwright uçtan uca testleri
 /tarifeler/                        Doğrulanmış/doğrulanmamış il listesi
 /havalimani/  , /havalimani/{slug}/  Havalimanı taksi ücreti sayfaları
 /otogar/      , /otogar/{slug}/      Otogar taksi ücreti sayfaları
+/rota/        , /rota/{slug}/        Popüler rota mesafe + tahmini ücret sayfaları (bkz. 2.2)
 /rehber/      , /rehber/{slug}/      SSS / rehber makaleleri
 /yasal/veri-kaynaklari/            Veri kaynakları ve güncellik yöntemi
 /yasal/gizlilik-politikasi/        (noindex)
@@ -170,7 +201,7 @@ verisi olmadan **kasıtlı olarak üretilmedi** — spesifikasyonun kendi kural�
 ```bash
 pnpm data:validate            # Zod + çapraz referans doğrulama (kritik hata build'i durdurur)
 pnpm data:validate-phones     # Telefon format/alan kodu/GSM kontrolleri
-pnpm data:validate-geography  # Türkiye sınırı, (0,0), aynı koordinat kümesi kontrolleri
+pnpm data:validate-geography  # Türkiye sınırı, (0,0), aynı koordinat kümesi + gerçek il sınırı poligonu kontrolleri
 pnpm data:normalize           # data/normalized/ üretir
 pnpm data:duplicates          # Mükerrerlik puanlama (bkz. spec §14.4), data/reports/duplicates.json
 pnpm data:change-report       # Son commit'e göre değişiklik özeti + IndexNow URL listesi
@@ -220,5 +251,6 @@ pnpm check       # astro check (TypeScript + Astro şablon denetimi)
 ## 10. Yayın Öncesi Kontrol Listesi
 
 Bkz. proje talimatının 41. bölümü. Bu teslimatta henüz karşılanmayan maddeler: durak verisi,
-ilçe sayfaları, popüler rotalar, hastane/AVM kümeleri, Antalya/Bursa/Kocaeli/Muğla/Balıkesir
-tarife doğrulaması, Lighthouse ölçümü (gerçek bir deploy sonrası yapılmalı).
+ilçe sayfaları, hastane/AVM kümeleri, kalan 5 popüler rota (bkz. 2.2), Lighthouse ölçümü
+(gerçek bir deploy sonrası yapılmalı). Antalya/Bursa/Kocaeli/Muğla/Balıkesir tarife doğrulaması
+ve sabit hat alan kodları artık tamamlandı.

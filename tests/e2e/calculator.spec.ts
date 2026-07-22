@@ -18,8 +18,8 @@ test("selecting an unverified province shows the honest not-yet-verified message
 }) => {
   await page.goto("/taksi-ucreti-hesaplama/");
 
-  const bursaOption = page.locator('select[name="provinceId"] option', { hasText: "Bursa" });
-  await expect(bursaOption).toContainText("tarife doğrulanmadı");
+  const vanOption = page.locator('select[name="provinceId"] option', { hasText: "Van" });
+  await expect(vanOption).toContainText("tarife doğrulanmadı");
 });
 
 test("province tariff page preselects its own province in the calculator", async ({ page }) => {

@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { buildCollectionPageSchema } from "../../lib/schema/collection-page";
+import { getActivePopularRoutes } from "../../lib/repositories/popular-routes";
+import { getProvinceById } from "../../lib/repositories/provinces";
+
+const routes = getActivePopularRoutes();
+
+const meta = buildPageMeta({
+  title: "Popüler Rotalar — Taksi Ücreti ve Mesafe Bilgisi",
+  description:
+    "Havalimanından şehir merkezine sık sorulan güzergâhlarda doğrulanmış yol mesafesi ve güncel taksi ücreti tahmini.",
+  path: "/rota/",
+});
+
+const structuredData = [
+  buildCollectionPageSchema({
+    name: "Popüler Rotalar",
+    description: "Doğrulanmış mesafeli popüler taksi güzergâhları listesi.",
+    path: "/rota/",
+    itemList: routes.map((r) => ({
+      name: `${r.originName} - ${r.destinationName}`,
+      path: `/rota/${r.slug}/`,
+    })),
+  }),
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Popüler Rotalar", path: "/rota/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-4xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">Popüler Rotalar</h1>
+    <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+      Yalnızca yol mesafesi güvenilir bir kaynaktan doğrulanabilen güzergâhlar burada listelenir.
+      Mesafesi doğrulanamayan güzergâhlar, hatalı bir tahmin göstermektense hiç yayınlanmaz.
+    </p>
+
+    {
+      routes.length > 0 ? (
+        <div class="mt-8 grid gap-4 sm:grid-cols-2">
+          {routes.map((route) => {
+            const province = getProvinceById(route.provinceId);
+            return (
+              <a href={`/rota/${route.slug}/`} class="card block hover:shadow-md">
+                <p class="text-ink-900 font-semibold">
+                  {route.originName} — {route.destinationName}
+                </p>
+                <p class="text-ink-500 mt-1 text-sm">
+                  {province?.name}
+                  {" · "}
+                  {route.distanceKm} km
+                </p>
+              </a>
+            );
+          })}
+        </div>
+      ) : (
+        <p class="text-ink-500 mt-8">
+          Şu anda doğrulanmış mesafeli bir rota bulunmuyor. Yeni rotalar doğrulandıkça bu sayfaya
+          eklenecektir.
+        </p>
+      )
+    }
+  </section>
+</BaseLayout>

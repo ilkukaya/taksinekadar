@@ -5,6 +5,7 @@ import { getActiveProvinces } from "../src/lib/repositories/provinces";
 import { getAllActiveTariffsForProvince } from "../src/lib/repositories/tariffs";
 import { getActiveAirports } from "../src/lib/repositories/airports";
 import { getActiveBusTerminals } from "../src/lib/repositories/bus-terminals";
+import { getActivePopularRoutes } from "../src/lib/repositories/popular-routes";
 import { getAllGuidesFromDisk } from "../src/lib/content/guides-fs";
 import { PROJECT_ROOT } from "../src/lib/utils/paths";
 
@@ -48,6 +49,7 @@ function main() {
     { loc: canonicalUrl("/tarifeler/") },
     { loc: canonicalUrl("/havalimani/") },
     { loc: canonicalUrl("/otogar/") },
+    { loc: canonicalUrl("/rota/") },
     { loc: canonicalUrl("/rehber/") },
     { loc: canonicalUrl("/yasal/veri-kaynaklari/") },
     { loc: canonicalUrl("/yasal/iletisim/") },
@@ -81,6 +83,14 @@ function main() {
     })),
   ];
 
+  const rotaUrls: SitemapUrl[] = [
+    { loc: canonicalUrl("/rota/") },
+    ...getActivePopularRoutes().map((r) => ({
+      loc: canonicalUrl(`/rota/${r.slug}/`),
+      lastmod: r.lastVerifiedAt,
+    })),
+  ];
+
   const guideUrls: SitemapUrl[] = [
     { loc: canonicalUrl("/rehber/") },
     ...getAllGuidesFromDisk().map((g) => ({
@@ -94,6 +104,7 @@ function main() {
     "tariffs.xml": tariffUrls,
     "airports.xml": airportUrls,
     "otogar.xml": otogarUrls,
+    "rota.xml": rotaUrls,
     "guides.xml": guideUrls,
   };
 

@@ -4,6 +4,7 @@ import { getAllTaxiStands } from "../src/lib/repositories/taxi-stands";
 import { getCurrentTariffs, getTariffHistory } from "../src/lib/repositories/tariffs";
 import { getAllAirports } from "../src/lib/repositories/airports";
 import { getAllBusTerminals } from "../src/lib/repositories/bus-terminals";
+import { getAllPopularRoutes } from "../src/lib/repositories/popular-routes";
 
 type Issue = { level: "error" | "warning"; message: string };
 
@@ -152,6 +153,38 @@ function validatePois(provinceIds: Set<string>, districtIds: Set<string>) {
   }
 }
 
+function validatePopularRoutes(provinceIds: Set<string>, districtIds: Set<string>) {
+  const routes = getAllPopularRoutes();
+
+  for (const route of routes) {
+    if (!provinceIds.has(route.provinceId)) {
+      error(`Rota "${route.slug}" bilinmeyen bir ile bağlı: ${route.provinceId}`);
+    }
+    if (route.originDistrictId && !districtIds.has(route.originDistrictId)) {
+      error(
+        `Rota "${route.slug}" bilinmeyen bir başlangıç ilçesine bağlı: ${route.originDistrictId}`,
+      );
+    }
+    if (route.destinationDistrictId && !districtIds.has(route.destinationDistrictId)) {
+      error(
+        `Rota "${route.slug}" bilinmeyen bir varış ilçesine bağlı: ${route.destinationDistrictId}`,
+      );
+    }
+  }
+
+  const dupIds = findDuplicates(routes, (r) => r.id);
+  if (dupIds.length > 0) {
+    error(`Tekrarlanan rota id'si: ${dupIds.join(", ")}`);
+  }
+
+  const dupSlugs = findDuplicates(routes, (r) => r.slug);
+  if (dupSlugs.length > 0) {
+    error(`Tekrarlanan rota slug'ı: ${dupSlugs.join(", ")}`);
+  }
+
+  return routes;
+}
+
 function main() {
   console.log("Veri doğrulama başlıyor...\n");
 
@@ -164,6 +197,7 @@ function main() {
   validateTaxiStands(provinceIds, districtIds);
   validateTariffs(provinceIds, districtIds);
   validatePois(provinceIds, districtIds);
+  validatePopularRoutes(provinceIds, districtIds);
 
   const errors = issues.filter((i) => i.level === "error");
   const warnings = issues.filter((i) => i.level === "warning");
