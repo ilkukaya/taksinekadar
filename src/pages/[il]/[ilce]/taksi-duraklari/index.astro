@@ -1,0 +1,129 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta, withBrandSuffix } from "../../../../lib/seo/meta";
+import { buildCollectionPageSchema } from "../../../../lib/schema/collection-page";
+import { canonicalUrl } from "../../../../config/site";
+import { getActiveProvinces } from "../../../../lib/repositories/provinces";
+import { getDistrictsByProvince } from "../../../../lib/repositories/districts";
+import { getTaxiStandsByDistrict } from "../../../../lib/repositories/taxi-stands";
+import { locativeOf } from "../../../../lib/language/turkish-suffix";
+import { formatPhoneForTel } from "../../../../lib/utils/format";
+import type { Province, District, TaxiStand } from "../../../../lib/validation/schemas";
+
+export function getStaticPaths() {
+  const paths: {
+    params: { il: string; ilce: string };
+    props: { province: Province; district: District; stands: TaxiStand[] };
+  }[] = [];
+  for (const province of getActiveProvinces()) {
+    for (const district of getDistrictsByProvince(province.id)) {
+      const stands = getTaxiStandsByDistrict(district.id);
+      if (stands.length === 0) continue;
+      paths.push({
+        params: { il: province.slug, ilce: district.slug },
+        props: { province, district, stands },
+      });
+    }
+  }
+  return paths;
+}
+
+const { province, district, stands } = Astro.props as {
+  province: Province;
+  district: District;
+  stands: TaxiStand[];
+};
+
+const sortedStands = [...stands].sort((a, b) => a.name.localeCompare(b.name, "tr"));
+const withPhone = stands.filter((s) => s.phonePrimary).length;
+
+const path = `/${province.slug}/${district.slug}/taksi-duraklari/`;
+// District names like "Merkez" repeat across many provinces — the province name is always
+// included so titles/descriptions stay unique site-wide (spec's duplicate-title build gate).
+const title = withBrandSuffix(`${district.name} (${province.name}) Taksi Durakları`);
+const description = `${province.name} iline bağlı ${locativeOf(district.name)} ${stands.length} taksi durağının adı, adresi ve telefon numarası (varsa).`;
+
+const meta = buildPageMeta({ title, description, path });
+
+const structuredData = [
+  buildCollectionPageSchema({
+    name: `${district.name} Taksi Durakları`,
+    description,
+    path,
+    itemList: sortedStands.slice(0, 200).map((s) => ({ name: s.name, path: `${path}#${s.slug}` })),
+  }),
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Taksi Durakları", path: "/taksi-duraklari/" },
+      { name: province.name, path: `/${province.slug}/taksi-duraklari/` },
+      { name: district.name, path },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">
+      {district.name}
+      <span class="text-ink-500 font-normal">({province.name})</span> Taksi Durakları
+    </h1>
+    <p class="text-ink-600 mt-3 text-lg">
+      {locativeOf(district.name)} listelenen <strong>{stands.length}</strong> taksi durağı{" "}
+      {withPhone > 0 && <>({withPhone} tanesinde telefon numarası mevcut)</>}.
+    </p>
+
+    <div class="mt-8 space-y-3">
+      {
+        sortedStands.map((stand) => (
+          <div id={stand.slug} class="card">
+            <p class="text-ink-900 font-semibold">{stand.name}</p>
+            {stand.address && <p class="text-ink-600 mt-1 text-sm">{stand.address}</p>}
+            {stand.phonePrimary && (
+              <p class="mt-1 text-sm">
+                <a
+                  href={`tel:${formatPhoneForTel(stand.phonePrimary)}`}
+                  class="text-ink-800 font-medium underline"
+                >
+                  {stand.phonePrimary}
+                </a>
+              </p>
+            )}
+            {!stand.phonePrimary && (
+              <p class="text-ink-400 mt-1 text-sm">Telefon numarası bu kaynakta doğrulanamadı.</p>
+            )}
+            <p class="mt-1">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stand.mapQuery ?? stand.name)}`}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                class="text-ink-500 text-xs underline"
+              >
+                Haritada ara →
+              </a>
+            </p>
+          </div>
+        ))
+      }
+    </div>
+
+    <section class="mt-10">
+      <p class="text-ink-400 text-xs">
+        Kaynak: taksi724.com üzerinden derlenmiş durak dizini. Bu durak/telefon bilgileri belediye
+        veya resmî bir kaynaktan ayrıca doğrulanmamıştır; taşınma, kapanma veya numara değişikliği
+        olabilir.{" "}
+        <a href="/yasal/veri-kaynaklari/" class="underline"> Veri kaynakları hakkında </a>
+        .
+      </p>
+    </section>
+
+    <section class="mt-6">
+      <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">
+        {province.name} taksi ücreti sayfasına git →
+      </a>
+    </section>
+  </section>
+</BaseLayout>

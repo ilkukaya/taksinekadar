@@ -3,16 +3,19 @@ import { join } from "node:path";
 import { getActiveProvinces } from "../src/lib/repositories/provinces";
 import { getActiveAirports } from "../src/lib/repositories/airports";
 import { getActiveBusTerminals } from "../src/lib/repositories/bus-terminals";
+import { getDistrictsByProvince } from "../src/lib/repositories/districts";
+import { getTaxiStandsByDistrict } from "../src/lib/repositories/taxi-stands";
 import { PROJECT_ROOT } from "../src/lib/utils/paths";
 
 /**
  * Build-time search index for the client-side SearchBox component. Only entities with a
- * real, live page get an entry here — district/stand search will be added once those page
- * types ship (see spec's staged rollout in README), never as a link to a page that doesn't exist yet.
+ * real, live page get an entry here. Individual taxi stands (thousands of them) are NOT
+ * indexed individually — their district's durak listing page is the right search
+ * granularity and already links every stand it covers.
  */
 type SearchIndexItem = {
   name: string;
-  type: "il" | "havalimani" | "otogar";
+  type: "il" | "havalimani" | "otogar" | "ilce";
   path: string;
   province?: string;
 };
@@ -20,6 +23,7 @@ type SearchIndexItem = {
 function buildSearchIndex(): SearchIndexItem[] {
   const provinces = getActiveProvinces();
   const provinceNameById = new Map(provinces.map((p) => [p.id, p.name]));
+  const provinceSlugById = new Map(provinces.map((p) => [p.id, p.slug]));
 
   const provinceItems: SearchIndexItem[] = provinces.map((p) => ({
     name: p.name,
@@ -41,7 +45,18 @@ function buildSearchIndex(): SearchIndexItem[] {
     province: provinceNameById.get(b.provinceId),
   }));
 
-  return [...provinceItems, ...airportItems, ...busTerminalItems];
+  const districtItems: SearchIndexItem[] = provinces.flatMap((p) =>
+    getDistrictsByProvince(p.id)
+      .filter((d) => getTaxiStandsByDistrict(d.id).length > 0)
+      .map((d) => ({
+        name: d.name,
+        type: "ilce" as const,
+        path: `/${provinceSlugById.get(p.id)}/${d.slug}/taksi-duraklari/`,
+        province: p.name,
+      })),
+  );
+
+  return [...provinceItems, ...airportItems, ...busTerminalItems, ...districtItems];
 }
 
 function main() {

@@ -28,28 +28,29 @@ pnpm test:e2e        # Playwright (önce `pnpm build:astro-only && pnpm preview`
 Proje, master promptun kendi önerdiği aşamalı yayın planına (bölüm 40) göre inşa edilmektedir.
 Bu ilk teslimat **Faz 1 ve ötesinde bazı Faz 3 unsurlarını** kapsar:
 
-| Kapsam                                      | Durum                                                            |
-| ------------------------------------------- | ---------------------------------------------------------------- |
-| Marka, Astro/Tailwind iskeleti              | ✅ Tamamlandı                                                    |
-| Taksi ücreti hesaplama motoru (client-side) | ✅ Tamamlandı                                                    |
-| 81 il hub + il tarife sayfaları             | ✅ Tamamlandı                                                    |
-| 973 ilçe referans verisi                    | ✅ Tamamlandı (yalnızca veri; ilçe sayfaları henüz yok)          |
-| Doğrulanmış il tarifeleri                   | ✅ 41 il + Alanya/Gazipaşa/Cide ilçe tarifesi — aşağıya bakın    |
-| Havalimanı ve otogar sayfaları              | ✅ Tamamlandı (plan Faz 3'tü, veri hazır olduğu için öne alındı) |
-| Rehber (SSS) içerikleri                     | ✅ 7 makale                                                      |
-| Popüler rotalar                             | ⚠️ Kısmi — 3 doğrulanmış güzergâh yayında, aşağıya bakın         |
-| İl sınırı doğrulaması (gerçek OSM poligonu) | ✅ Tamamlandı — bkz. bölüm 7                                     |
-| Taksi durağı verisi (OSM + belediye)        | ❌ Faz 2 — bilinçli olarak ertelendi                             |
-| İlçe ve durak sayfaları                     | ❌ Faz 2 — durak verisi olmadan boş sayfa üretilmedi             |
-| Hastane/AVM kümeleri                        | ❌ Faz 4                                                         |
+| Kapsam                                        | Durum                                                            |
+| --------------------------------------------- | ---------------------------------------------------------------- |
+| Marka, Astro/Tailwind iskeleti                | ✅ Tamamlandı                                                    |
+| Taksi ücreti hesaplama motoru (client-side)   | ✅ Tamamlandı                                                    |
+| 81 il hub + il tarife sayfaları               | ✅ Tamamlandı                                                    |
+| 973 ilçe referans verisi                      | ✅ Tamamlandı (yalnızca veri; ilçe sayfaları henüz yok)          |
+| Doğrulanmış il tarifeleri                     | ✅ 41 il + Alanya/Gazipaşa/Cide ilçe tarifesi — aşağıya bakın    |
+| Havalimanı ve otogar sayfaları                | ✅ Tamamlandı (plan Faz 3'tü, veri hazır olduğu için öne alındı) |
+| Rehber (SSS) içerikleri                       | ✅ 7 makale                                                      |
+| Popüler rotalar                               | ⚠️ Kısmi — 3 doğrulanmış güzergâh yayında, aşağıya bakın         |
+| İl sınırı doğrulaması (gerçek OSM poligonu)   | ✅ Tamamlandı — bkz. bölüm 7                                     |
+| Taksi durağı verisi + ilçe/il durak sayfaları | ✅ 8285 durak, 77 il / 733 ilçe — bkz. bölüm 2.3                 |
+| Hastane/AVM kümeleri                          | ❌ Faz 4                                                         |
 
 **Neden bu sınır?** Proje talimatı açıkça "bilmediğin tarifeyi, telefonu, adresi... asla
-uydurma" diyor. Taksi durağı verisi gerçek bir OSM/Geofabrik PBF indirmesi veya belediye açık
-veri portalı erişimi gerektirir; bu ortamda o iki kaynak da erişilebilir değil (bkz. bölüm 2.1),
-bu yüzden tek bir sahte durak kaydı bile eklenmedi. Aynı ilke hastane/AVM kümeleri için de
-geçerli. Popüler rotalarda ise mesafesi güvenilir, isimli bir kaynaktan doğrulanamayan
-güzergâhlar (örn. İstanbul Havalimanı ↔ Taksim — kaynaklar 35-53 km arasında çelişiyor)
-kasıtlı olarak yayınlanmadı; bkz. bölüm 2.2.
+uydurma" diyor. Bu ortamda OSM/Geofabrik ve belediye açık veri portallarına erişim engelli
+olduğundan (bkz. bölüm 2.1), taksi durağı verisi bu kaynaklardan **bu oturumda** derlenemedi;
+bunun yerine kullanıcı tarafından sağlanan, taksi724.com'dan derlenmiş bir dışa aktarım
+kullanıldı — bkz. bölüm 2.3 için kaynak, doğrulama ve hariç tutulan veri hakkında tam
+açıklama. Hastane/AVM kümeleri için henüz böyle bir veri seti yok, bu yüzden hâlâ Faz 4.
+Popüler rotalarda ise mesafesi güvenilir, isimli bir kaynaktan doğrulanamayan güzergâhlar
+(örn. İstanbul Havalimanı ↔ Taksim — kaynaklar 35-53 km arasında çelişiyor) kasıtlı olarak
+yayınlanmadı; bkz. bölüm 2.2.
 
 ---
 
@@ -93,8 +94,9 @@ Tüm tarife kaynakları, yürürlük tarihleri ve güven puanları `data/source/
 Bu ortamın ağ ilkesi altında `overpass-api.de` (OSM Overpass API) ve büyükşehir belediyelerinin
 açık veri portalları (örn. `data.ibb.gov.tr`) bağlantı düzeyinde engellidir (proxy `403 connect
 rejected` döndürür, yeniden denemeyle aşılamaz — kod veya kimlik doğrulama sorunu değildir).
-Bu nedenle gerçek bir taksi durağı veri seti bu oturumda indirilemedi/işlenemedi; bölüm 1'deki
-"Faz 2 ertelendi" kararı budur. Araştırma sırasında yan bir kazanım olarak, GitHub üzerinden
+Bu nedenle bu iki kaynaktan gerçek bir taksi durağı veri seti bu oturumda indirilemedi/
+işlenemedi — durak verisi sonunda başka bir yoldan (kullanıcı tarafından sağlanan bir
+dışa aktarım) geldi, bkz. bölüm 2.3. Araştırma sırasında yan bir kazanım olarak, GitHub üzerinden
 LFS ile servis edilen bağımsız bir OSM türevi veri seti (`izzetkalic/geojsons-of-turkey`,
 ODbL) erişilebilir olduğu için il sınırı poligonları elde edildi ve
 `scripts/validate-geography.ts`'e gerçek nokta-içinde (point-in-polygon) doğrulaması olarak
@@ -113,6 +115,41 @@ da net bir km rakamı yerine yalnızca belirsiz bir "yaklaşık" ifadesi bulunab
 araştırma turunda bu 5 güzergâh için tek, savunulabilir bir rakama ulaşmak üzere elle (bir kerelik)
 bir harita/rota sorgusu yapılması önerilir — spesifikasyonun yasakladığı şey canlı bir routing
 API'sine **sitede** bağımlı kalmaktır, tek seferlik insan doğrulaması değil.
+
+### 2.3 Taksi durağı verisi
+
+`/taksi-duraklari/` altında 77 il ve 733 ilçede toplam **8285 taksi durağı** yayındadır
+(`/{il}/taksi-duraklari/` il indeksi ve `/{il}/{ilce}/taksi-duraklari/` ilçe listeleri).
+Bayburt, Bartın, Iğdır ve Kilis için kaynakta hiç kayıt yoktu; bu 4 il henüz durak verisi
+göstermiyor.
+
+**Kaynak ve yöntem:** Bu veri OSM/belediye açık veri portalından değil, kullanıcının
+taksi724.com'dan derleyip temizlediği bir CSV dışa aktarımından geldi
+(`data/raw/taksi724-duraklari-kaynak.csv`, git-ignored; `scripts/import-taksi724.ts` ile
+işlenir). İl/ilçe eşlemesi kaynağın kendi verisiyle %99,98 oranında (8273/8285) doğrudan
+örtüştü; kalan 2 kayıt açıkça belgelenmiş bir düzeltmeyle çözüldü: İstanbul'un eski "Eyüp"
+adı "Eyüpsultan" ile eşlendi, ve adres alanında "...Kazan, Ankara" yazan tek bir kayıt
+(kaynakta yanlışlıkla "İstanbul/Kahramankazan" olarak etiketlenmişti) Ankara/Kahramankazan'a
+düzeltildi.
+
+**Veri kalitesi filtreleri (içe aktarma sırasında otomatik uygulanır):** Kaynaktaki
+telefon numaralarının bir kısmı, birbiriyle hiçbir ilgisi olmayan onlarca durakta (bazen
+8 farklı ilde) birebir aynı şekilde tekrarlanıyordu — bu, gerçek bir paylaşılan çağrı
+hattı değil, kaynağın kendi şablon/placeholder verisi olarak değerlendirildi (ör. bir
+numara 8 ilde 75 farklı durakta çıktı). Böyle bir numara 5+ durak tarafından paylaşılıyorsa
+veya 2+ farklı ilde görülüyorsa, o durağın telefon alanı **boş bırakıldı** (durağın adı,
+adresi ve konumu korunarak) — 8285 kayıttan 759'u bu nedenle, ayrıca sabit hat alan kodu
+kayıtlı ile uyuşmayan 96 kayıt daha (`data:validate-phones` kontrolüyle, artık doğrulanmış
+`landlineAreaCodes` verisine karşı) aynı şekilde boşaltıldı — toplam 855 durakta (%10,3)
+yanlış numara göstermektense hiç numara gösterilmiyor. Aynı telefonu paylaşan ama 2-4
+durakla sınırlı ve tek il içinde kalan gruplar (muhtemelen gerçek küçük kooperatif/durak
+paylaşımları) olduğu gibi bırakıldı.
+
+Bu veri seti belediye veya OSM gibi resmî bir kaynaktan ayrıca doğrulanmamıştır
+(`confidenceScore: 50`, `sourceType: manual`); durak taşınmış, kapanmış veya numarası
+değişmiş olabilir. `scripts/detect-duplicates.ts` olası mükerrer kayıtları puanlayarak
+raporlar (`data/reports/duplicates.json`) — 1273 aday çiftten yalnızca 3'ü inceleme eşiğini
+(80 puan) geçti; bunlar yayın engellemez, ileride elle gözden geçirilebilir.
 
 ---
 
@@ -202,13 +239,15 @@ tests/e2e/         Playwright uçtan uca testleri
 /yasal/gizlilik-politikasi/        (noindex)
 /yasal/kullanim-sartlari/          (noindex)
 /yasal/iletisim/
-/taksi-duraklari/                  Faz 2 duyurusu (noindex, durak verisi gelene kadar)
+/taksi-duraklari/                  81 il listesi (durağı olan/olmayan, bkz. 2.3)
+/{il}/taksi-duraklari/             İl içindeki ilçelerin durak sayısı listesi (durağı olan 77 il)
+/{il}/{ilce}/taksi-duraklari/      İlçedeki durakların adı/adres/telefonu (733 ilçe)
 /404
 ```
 
-`/istanbul/kadikoy/taksi-duraklari/` gibi ilçe ve durak sayfaları, gerçek doğrulanmış durak
-verisi olmadan **kasıtlı olarak üretilmedi** — spesifikasyonun kendi kuralı gereği ("Sadece
-'durak yok' metniyle boş sayfa üretme").
+Durağı olmayan 4 il (Bayburt, Bartın, Iğdır, Kilis) için `/{il}/taksi-duraklari/` sayfası
+**üretilmedi** — spesifikasyonun kendi kuralı gereği ("Sadece 'durak yok' metniyle boş sayfa
+üretme"); bu iller yalnızca üst listede "henüz durak verisi olmayan iller" altında görünür.
 
 ---
 
@@ -229,17 +268,23 @@ pnpm indexnow:submit          # INDEXNOW_KEY tanımlıysa değişen URL'leri bil
 iç bağlantı denetimi → build raporu. Kırık link, orphan sayfa veya tekrarlanan title/description
 bulunursa build **başarısız olur** (spec'in "kritik hata build'i durdursun" kuralı).
 
-### Faz 2 veri hattı (henüz çalıştırılamadı)
+### Taksi durağı içe aktarma hattı
 
-`scripts/import-osm.ts`, `scripts/import-municipal-data.ts` ve `scripts/merge-data.ts` gerçek
-kodla yazılmıştır ve doğru mimariye sahiptir, ancak:
+`scripts/import-taksi724.ts`, `data/raw/taksi724-duraklari-kaynak.csv` (git-ignored — kaynak
+dosya değişirse bu script yeniden çalıştırılır) dosyasını `data/source/taxi-stands.csv`'ye
+dönüştürür: il/ilçe eşlemesi, kararlı id/slug üretimi, şablon/uyumsuz telefonların temizlenmesi
+(bkz. 2.3). Kaynak dosya güncellenirse `npx tsx scripts/import-taksi724.ts` yeniden çalıştırılıp
+ardından tam doğrulama zinciri (`data:validate*`, `test`, `build`) tekrar edilmelidir.
+
+`scripts/import-osm.ts` ve `scripts/import-municipal-data.ts` hâlâ kullanılmadı (OSM/belediye
+erişimi bu ortamda engelli):
 
 - `import-osm.ts`, gerçek bir Geofabrik Türkiye PBF dosyası ve bir PBF ayrıştırıcı paketi
   (henüz eklenmedi) bekler; dosya yoksa net bir mesajla çıkar.
 - `import-municipal-data.ts`, 8 büyükşehir için bir parser kayıt defteri içerir; her parser,
   ilgili açık veri portalının gerçek yanıtı incelenmeden yazılmadığı için şu an hata fırlatır.
-- `merge-data.ts` tamamen çalışır durumdadır (alan bazlı önceliklendirme, §12.3) ve yukarıdaki
-  iki script gerçek aday kayıt ürettiğinde doğrudan kullanılabilir.
+- `merge-data.ts` tamamen çalışır durumdadır (alan bazlı önceliklendirme, §12.3) ve bu iki
+  script veya gelecekteki başka bir kaynak gerçek aday kayıt ürettiğinde kullanılabilir.
 
 ---
 
@@ -266,7 +311,7 @@ pnpm check       # astro check (TypeScript + Astro şablon denetimi)
 
 ## 10. Yayın Öncesi Kontrol Listesi
 
-Bkz. proje talimatının 41. bölümü. Bu teslimatta henüz karşılanmayan maddeler: durak verisi,
-ilçe sayfaları, hastane/AVM kümeleri, kalan 5 popüler rota (bkz. 2.2), kalan 40 ilin tarife
-doğrulaması (bkz. bölüm 2), Lighthouse ölçümü (gerçek bir deploy sonrası yapılmalı). Sabit hat
-alan kodları tamamlandı.
+Bkz. proje talimatının 41. bölümü. Bu teslimatta henüz karşılanmayan maddeler: hastane/AVM
+kümeleri, kalan 5 popüler rota (bkz. 2.2), kalan 40 ilin tarife doğrulaması (bkz. bölüm 2),
+4 ilin durak verisi (Bayburt, Bartın, Iğdır, Kilis — bkz. 2.3), Lighthouse ölçümü (gerçek bir
+deploy sonrası yapılmalı). Sabit hat alan kodları ve taksi durağı verisi/sayfaları tamamlandı.

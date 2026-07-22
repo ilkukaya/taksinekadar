@@ -1,0 +1,86 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta, withBrandSuffix } from "../../../lib/seo/meta";
+import { buildCollectionPageSchema } from "../../../lib/schema/collection-page";
+import { getActiveProvinces } from "../../../lib/repositories/provinces";
+import { getDistrictsByProvince } from "../../../lib/repositories/districts";
+import {
+  getTaxiStandsByDistrict,
+  getTaxiStandsByProvince,
+} from "../../../lib/repositories/taxi-stands";
+import { locativeOf } from "../../../lib/language/turkish-suffix";
+import type { Province } from "../../../lib/validation/schemas";
+
+export function getStaticPaths() {
+  return getActiveProvinces()
+    .filter((province) => getTaxiStandsByProvince(province.id).length > 0)
+    .map((province) => ({ params: { il: province.slug }, props: { province } }));
+}
+
+const { province } = Astro.props as { province: Province };
+
+const districtsWithStands = getDistrictsByProvince(province.id)
+  .map((district) => ({ district, count: getTaxiStandsByDistrict(district.id).length }))
+  .filter(({ count }) => count > 0)
+  .sort((a, b) => a.district.name.localeCompare(b.district.name, "tr"));
+
+const totalStands = districtsWithStands.reduce((sum, d) => sum + d.count, 0);
+
+const path = `/${province.slug}/taksi-duraklari/`;
+const title = withBrandSuffix(`${province.name} Taksi Durakları`);
+const description = `${locativeOf(province.name)} ilçe ilçe taksi durağı telefon ve adres bilgileri.`;
+
+const meta = buildPageMeta({ title, description, path });
+
+const structuredData = [
+  buildCollectionPageSchema({
+    name: `${province.name} Taksi Durakları`,
+    description,
+    path,
+    itemList: districtsWithStands.map(({ district }) => ({
+      name: district.name,
+      path: `/${province.slug}/${district.slug}/taksi-duraklari/`,
+    })),
+  }),
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Taksi Durakları", path: "/taksi-duraklari/" },
+      { name: province.name, path },
+    ]}
+  />
+
+  <section class="mx-auto max-w-4xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">{province.name} Taksi Durakları</h1>
+    <p class="text-ink-600 mt-3 max-w-2xl text-lg">
+      {province.name} genelinde {districtsWithStands.length} ilçede toplam{" "}
+      <strong>{totalStands}</strong> taksi durağı listelenmiştir. Durak listesi ve telefon numarası için
+      bir ilçe seçin.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        districtsWithStands.map(({ district, count }) => (
+          <a
+            href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
+            class="card block hover:shadow-md"
+          >
+            <p class="text-ink-900 font-semibold">{district.name}</p>
+            <p class="text-ink-500 mt-1 text-sm">{count} taksi durağı</p>
+          </a>
+        ))
+      }
+    </div>
+
+    <section class="mt-10">
+      <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">
+        {province.name} taksi ücreti sayfasına git →
+      </a>
+    </section>
+  </section>
+</BaseLayout>

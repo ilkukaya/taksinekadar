@@ -92,12 +92,25 @@ const meta = buildPageMeta({
       belirtilir.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Durakları (Yakında)</h2>
+    <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Durakları</h2>
     <p class="text-ink-600 mt-2">
-      Taksi durağı telefon ve adres verileri; OpenStreetMap (ODbL lisansı altında, gerekli atıf
-      verilerek), belediye açık veri portalları ve durakların resmî web siteleri önceliklendirilerek
-      toplanacak ve yayınlanmadan önce doğrulama sürecinden geçirilecektir. Bu özellik henüz yayında
-      değildir.
+      {totals.activeStandCount} taksi durağının adı, adresi ve (varsa) telefon numarası, taksi724.com
+      adlı üçüncü taraf dizin sitesinden derlenip temizlenmiş bir dışa aktarıma dayanmaktadır — belediye
+      veya OpenStreetMap gibi resmî bir kaynaktan ayrıca doğrulanmamıştır. Bu yüzden durak taşınmış, kapanmış
+      veya numarası değişmiş olabilir.
+    </p>
+    <p class="text-ink-600 mt-2">
+      İçe aktarma sırasında iki otomatik kalite filtresi uygulanır: (1) aynı telefon numarası
+      birbiriyle ilgisiz çok sayıda durakta (5 veya daha fazla, ya da 2'den fazla farklı ilde)
+      tekrarlanıyorsa, bu kaynağın şablon/placeholder verisi olarak değerlendirilip telefon alanı
+      boş bırakılır; (2) sabit hat numarasının alan kodu, durağın iline ait doğrulanmış alan koduyla
+      uyuşmuyorsa aynı şekilde boş bırakılır. Bu iki filtre toplam 855 durağın (%10,3) telefon
+      alanını boşalttı — durağın kendisi (adı, adresi, konumu) yine de listede kalır, yalnızca
+      güvenilir olmayan numara gösterilmez.
+    </p>
+    <p class="text-ink-500 mt-2 text-sm">
+      Bayburt, Bartın, Iğdır ve Kilis için kaynakta hiçbir kayıt yoktu; bu 4 il için durak sayfası
+      henüz üretilmedi.
     </p>
 
     <h2 class="text-ink-900 mt-10 text-xl font-bold">Güncelleme Yöntemi</h2>

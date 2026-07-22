@@ -6,6 +6,11 @@ import { getAllActiveTariffsForProvince } from "../src/lib/repositories/tariffs"
 import { getActiveAirports } from "../src/lib/repositories/airports";
 import { getActiveBusTerminals } from "../src/lib/repositories/bus-terminals";
 import { getActivePopularRoutes } from "../src/lib/repositories/popular-routes";
+import { getDistrictsByProvince } from "../src/lib/repositories/districts";
+import {
+  getTaxiStandsByDistrict,
+  getTaxiStandsByProvince,
+} from "../src/lib/repositories/taxi-stands";
 import { getAllGuidesFromDisk } from "../src/lib/content/guides-fs";
 import { PROJECT_ROOT } from "../src/lib/utils/paths";
 
@@ -50,6 +55,7 @@ function main() {
     { loc: canonicalUrl("/havalimani/") },
     { loc: canonicalUrl("/otogar/") },
     { loc: canonicalUrl("/rota/") },
+    { loc: canonicalUrl("/taksi-duraklari/") },
     { loc: canonicalUrl("/rehber/") },
     { loc: canonicalUrl("/yasal/veri-kaynaklari/") },
     { loc: canonicalUrl("/yasal/iletisim/") },
@@ -99,6 +105,24 @@ function main() {
     })),
   ];
 
+  const durakUrls: SitemapUrl[] = [{ loc: canonicalUrl("/taksi-duraklari/") }];
+  for (const province of provinces) {
+    if (getTaxiStandsByProvince(province.id).length === 0) continue;
+    durakUrls.push({ loc: canonicalUrl(`/${province.slug}/taksi-duraklari/`) });
+    for (const district of getDistrictsByProvince(province.id)) {
+      const stands = getTaxiStandsByDistrict(district.id);
+      if (stands.length === 0) continue;
+      const latest = stands.reduce(
+        (max, s) => (s.updatedAt > max ? s.updatedAt : max),
+        stands[0]!.updatedAt,
+      );
+      durakUrls.push({
+        loc: canonicalUrl(`/${province.slug}/${district.slug}/taksi-duraklari/`),
+        lastmod: latest,
+      });
+    }
+  }
+
   const sitemaps: Record<string, SitemapUrl[]> = {
     "pages.xml": pageUrls,
     "tariffs.xml": tariffUrls,
@@ -106,6 +130,7 @@ function main() {
     "otogar.xml": otogarUrls,
     "rota.xml": rotaUrls,
     "guides.xml": guideUrls,
+    "duraklar.xml": durakUrls,
   };
 
   for (const [filename, urls] of Object.entries(sitemaps)) {
