@@ -37,13 +37,19 @@ const meta = buildPageMeta({
     <p class="text-ink-600 mt-2">
       81 il ve {totals.districtCount} ilçe verisi, birbirinden bağımsız kamuya açık il/ilçe referans veri
       kümeleri karşılaştırılarak derlenmiştir. Plaka kodu, bölge, sabit hat alan kodu ve eski isim (varsa)
-      bilgileri bu karşılaştırmayla teyit edilmiştir. Enlem/boylam gibi bazı alanlar, bu sitenin hiçbir
-      özelliği için henüz zorunlu olmadığından şu an boş bırakılmıştır; ileride resmî kaynaklarla doğrulanarak
-      eklenecektir.
+      bilgileri bu karşılaştırmayla teyit edilmiştir.
     </p>
     <p class="text-ink-600 mt-2">
-      İl sınırları ayrıca gerçek coğrafi poligon verisiyle çapraz kontrol edilir: taksi durağı gibi
-      koordinatlı kayıtların, kayıtlı oldukları ilin sınırları içinde olup olmadığı
+      İl ve ilçe sayfalarındaki enlem/boylam alanları, aşağıda açıklanan aynı sınır poligonu
+      verisinden hesaplanan gerçek alan-ağırlıklı merkez (centroid) noktalarıdır — tahmini veya elle
+      girilmiş değildir. Bu, ilin/ilçenin şeklinin geometrik merkezidir; nüfusun yoğunlaştığı nokta
+      ile aynı olduğu ayrıca doğrulanmamıştır. Site şu an bu koordinatları haritada göstermek için
+      kullanmıyor; yalnızca aşağıdaki sınır doğrulaması için kullanılıyor.
+    </p>
+    <p class="text-ink-600 mt-2">
+      İl ve ilçe sınırları ayrıca gerçek coğrafi poligon verisiyle çapraz kontrol edilir: taksi
+      durağı gibi koordinatlı kayıtların, kayıtlı oldukları il ve ilçe sınırları içinde olup
+      olmadığı
       <a
         href="https://github.com/izzetkalic/geojsons-of-turkey"
         target="_blank"
@@ -55,8 +61,8 @@ const meta = buildPageMeta({
         target="_blank"
         rel="noopener noreferrer nofollow"
         class="text-ink-800 underline">ODbL</a
-      > lisansı altında paylaşılan bir il sınırı veri setiyle otomatik olarak (nokta-içinde-poligon testiyle)
-      doğrulanır (`scripts/validate-geography.ts`). Harita verisi © OpenStreetMap katkıda bulunanlar,
+      > lisansı altında paylaşılan il ve ilçe sınırı veri setleriyle otomatik olarak (nokta-içinde-poligon
+      testiyle) doğrulanır (`scripts/validate-geography.ts`). Harita verisi © OpenStreetMap katkıda bulunanlar,
       ODbL ile lisanslıdır.
     </p>
 

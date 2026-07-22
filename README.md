@@ -98,9 +98,34 @@ Bu nedenle bu iki kaynaktan gerçek bir taksi durağı veri seti bu oturumda ind
 işlenemedi — durak verisi sonunda başka bir yoldan (kullanıcı tarafından sağlanan bir
 dışa aktarım) geldi, bkz. bölüm 2.3. Araştırma sırasında yan bir kazanım olarak, GitHub üzerinden
 LFS ile servis edilen bağımsız bir OSM türevi veri seti (`izzetkalic/geojsons-of-turkey`,
-ODbL) erişilebilir olduğu için il sınırı poligonları elde edildi ve
-`scripts/validate-geography.ts`'e gerçek nokta-içinde (point-in-polygon) doğrulaması olarak
-entegre edildi — bkz. bölüm 7 ve `/yasal/veri-kaynaklari/`.
+ODbL) erişilebilir olduğu için hem il (admin_level=4) hem ilçe (admin_level=6) sınır poligonları
+elde edildi ve `scripts/validate-geography.ts`'e gerçek nokta-içinde (point-in-polygon)
+doğrulaması olarak entegre edildi — bkz. bölüm 7 ve `/yasal/veri-kaynaklari/`.
+
+**İl/ilçe merkez koordinatları (enlem/boylam):** `provinces.csv` ve `districts.csv`'deki
+`latitude`/`longitude` alanları, bu aynı sınır poligonlarından hesaplanan gerçek alan-ağırlıklı
+merkez (centroid) noktalarıyla dolduruldu (`src/lib/geography/polygon-centroid.ts` — shoelace
+formülüyle, delik/MultiPolygon'u doğru ağırlıklandırarak; `scripts/populate-boundary-centroids.ts`).
+İl eşlemesi zaten var olan ISO kod join'iyle 81/81 (%100) sonuçlandı. İlçe eşlemesi doğrudan isim
+karşılaştırmasıyla başladı ama kaynak, bazı illerin merkez ilçesini "{İl adı} merkez" gibi bizim
+veri setimizde karşılığı olmayan bir kalıpla adlandırıyordu; ayrıca birkaç ilin **tüm ilçeleri**
+komşu bir ilin plaka/network etiketiyle yanlış işaretlenmiş durumdaydı (doğrulandı: Kırşehir'in 7
+ilçesi kaynakta Kocaeli'nin etiketiyle, Mersin'in 7 ilçesi Hatay'ın etiketiyle görünüyor — ismin
+kendisi ve poligon şekli doğru, yalnızca üst veri etiketi hatalı). Bunları çözmek için, hiçbiri
+tahmine dayanmayan kademeli bir eşleştirme mantığı yazıldı
+(`src/lib/geography/match-district-boundaries.ts`): önce aynı ile ait doğrudan/`"merkez"`
+kalıbı/küçük yazım farkı eşleşmesi denenir; başarısız olursa ülke genelinde **tekil** isim
+eşleşmesi (yanlış etiketli ama ismi ülke çapında biricik olan ilçeler için) denenir; o da
+başarısızsa ve isim ülke genelinde birden fazla ilçeyle çakışıyorsa (ör. Zonguldak'ın ve Konya'nın
+ikisinin de "Ereğli" adlı bir ilçesi var), özelliğin kendi merkez noktası her adayın gerçek il
+poligonuyla nokta-içinde testinden geçirilir ve yalnızca tam olarak bir aday poligonu içeriyorsa
+kabul edilir. Sonuç: 973/973 ilçenin (%100) tamamı gerçek geometriden koordinat aldı; kaynaktaki
+tek eşleşmeyen özellik "Περιφερειακή Ενότητα Χίου" (Yunanistan'ın Sakızada bölgesi) — Türkiye'ye
+ait olmayan, kaynağın kendi veri hatası olan yabancı bir kayıt, beklenen ve kalıcı bir istisna.
+Aynı eşleştirme, `validate-geography.ts`'e ilçe seviyesinde nokta-içinde-poligon kontrolü olarak
+da entegre edildi: her ilçenin kendi merkez koordinatı kendi iline ait mi (hata düzeyinde), ve
+koordinatı olan her taksi durağı kayıtlı ilçesinin sınırları içinde mi (uyarı düzeyinde,
+çünkü ilçe sınırları çok daha dar ve durak koordinatları henüz bu düzeyde hassas değil).
 
 ### 2.2 Popüler rotalar
 
@@ -176,8 +201,12 @@ yapılmasını ve bunun burada belirtilmesini istiyor. Yapılan varsayımlar:
 4. **Bölge sınıflandırması** klasik "7 coğrafi bölge" sistemine göre yapılmıştır (Marmara, Ege,
    Akdeniz, İç Anadolu, Karadeniz, Doğu Anadolu, Güneydoğu Anadolu) — TÜİK'in İBBS (NUTS)
    bölgeleri değil, halk arasında yaygın kullanılan klasik sistemdir.
-5. **İl/ilçe enlem-boylam alanları boş bırakıldı.** Site hiçbir gömülü/canlı harita
-   kullanmadığından bu alanlar şu an işlevsel değildir; ileride gerçek kaynaklarla doldurulabilir.
+5. **İl/ilçe enlem-boylam alanları, gerçek sınır poligonunun alan-ağırlıklı geometrik merkezini
+   (centroid) gösterir** (bkz. bölüm 2.1) — ilin/ilçenin şeklinin matematiksel merkezidir; nüfusun
+   yoğunlaştığı nokta veya "şehir merkezi" olarak algılanan yer ile aynı olduğu ayrıca
+   doğrulanmamıştır (özellikle uzun/düzensiz kıyı şeridi olan ilçelerde ikisi belirgin şekilde
+   farklı olabilir). Site şu an bu alanları haritada göstermek için kullanmıyor; yalnızca
+   `scripts/validate-geography.ts`'teki nokta-içinde-poligon doğrulaması bu alanlara dayanıyor.
 6. **AdSense yayıncı kimliği (`PUBLIC_ADSENSE_PUB_ID`) yapılandırılmadı.** Reklam bileşenleri
    tamamen hazır ve CLS yaratmayacak şekilde yer ayırıyor, ancak env değişkeni tanımlanana kadar
    hiçbir reklam scripti veya sahte yayıncı kimliği yüklenmez.

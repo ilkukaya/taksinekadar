@@ -1,10 +1,14 @@
 import { getAllTaxiStands } from "../src/lib/repositories/taxi-stands";
-import { getProvinceById } from "../src/lib/repositories/provinces";
+import { getProvinceById, getActiveProvinces } from "../src/lib/repositories/provinces";
+import { getActiveDistricts, getDistrictById } from "../src/lib/repositories/districts";
 import {
   loadProvinceBoundaries,
   findBoundaryByIsoCode,
 } from "../src/lib/geography/province-boundaries";
+import { loadDistrictBoundaries } from "../src/lib/geography/district-boundaries";
+import { matchDistrictBoundaries } from "../src/lib/geography/match-district-boundaries";
 import { isPointInGeometry } from "../src/lib/geography/point-in-polygon";
+import type { PolygonalGeometry } from "../src/lib/geography/point-in-polygon";
 
 /**
  * Turkey's rough bounding box — always checked first, regardless of whether real
@@ -38,6 +42,65 @@ async function main() {
     );
   }
 
+  // Real district (ilçe) boundary polygons, matched to districts.csv via the same cascade
+  // scripts/populate-boundary-centroids.ts uses (see that module's doc comment for the tier
+  // list) — reused here, not reimplemented, so both stay in lockstep.
+  const provinceGeometryById = new Map<string, PolygonalGeometry>();
+  if (boundaries) {
+    for (const province of getActiveProvinces()) {
+      const boundary = findBoundaryByIsoCode(boundaries, province.officialCode);
+      if (boundary) provinceGeometryById.set(province.id, boundary.geometry);
+    }
+  }
+
+  const districtBoundaries = boundaries ? await loadDistrictBoundaries() : null;
+  let districtGeometryById = new Map<string, PolygonalGeometry>();
+  if (districtBoundaries) {
+    const match = matchDistrictBoundaries(
+      getActiveDistricts(),
+      getActiveProvinces(),
+      districtBoundaries,
+      provinceGeometryById,
+    );
+    districtGeometryById = match.geometryByDistrictId;
+    console.log(
+      `İlçe sınır poligonları yüklendi (${districtBoundaries.length} özellik, ${districtGeometryById.size} ilçeye eşleşti) — gerçek nokta-içinde testi aktif.`,
+    );
+    // Exactly one known, expected exception: a stray Greek "Περιφερειακή Ενότητα Χίου"
+    // feature in the upstream source that has no Turkish ilçe counterpart (see
+    // populate-boundary-centroids.ts). More than one unmatched feature would mean a real
+    // Turkish district silently lost its match — worth a warning, not a silent pass.
+    if (match.unmatchedBoundaries.length > 1) {
+      issues.push({
+        level: "warning",
+        message: `İlçe sınırı eşleştirmesi ${match.unmatchedBoundaries.length} özelliği eşleştiremedi (beklenen: 1) — yeni bir eşleşmeme olabilir: ${match.unmatchedBoundaries.map((b) => b.name).join(", ")}`,
+      });
+    }
+  } else if (boundaries) {
+    console.log(
+      "İlçe sınır poligonları yüklenemedi — ilçe seviyesinde nokta-içinde testi atlanacak.",
+    );
+  }
+
+  // Every district's own centroid (populated by populate-boundary-centroids.ts) should fall
+  // within its own province's polygon — a cheap, comprehensive sanity check on the district
+  // boundary match itself, independent of how many taxi stands happen to have coordinates.
+  if (boundaries) {
+    for (const district of getActiveDistricts()) {
+      if (district.latitude === undefined || district.longitude === undefined) continue;
+      const province = getProvinceById(district.provinceId);
+      const geometry = province ? provinceGeometryById.get(province.id) : undefined;
+      if (!geometry) continue;
+      const isInside = isPointInGeometry([district.longitude, district.latitude], geometry);
+      if (!isInside) {
+        issues.push({
+          level: "error",
+          message: `İlçe "${district.name}" (${district.id}): merkez koordinatı, kayıtlı ili olan ${province!.name} sınırları dışında görünüyor (${district.latitude}, ${district.longitude}).`,
+        });
+      }
+    }
+  }
+
   for (const stand of withCoordinates) {
     const { latitude, longitude } = stand as { latitude: number; longitude: number };
 
@@ -68,14 +131,29 @@ async function main() {
     const boundary = province
       ? findBoundaryByIsoCode(boundaries, province.officialCode)
       : undefined;
-    if (!boundary) continue; // no matching polygon found for this province — skip, don't guess
+    if (boundary) {
+      const isInside = isPointInGeometry([longitude, latitude], boundary.geometry);
+      if (!isInside) {
+        issues.push({
+          level: "error",
+          message: `Durak "${stand.name}" (${stand.id}): koordinat, kayıtlı ili olan ${province!.name} sınırları dışında görünüyor (${latitude}, ${longitude}).`,
+        });
+      }
+    }
 
-    const isInside = isPointInGeometry([longitude, latitude], boundary.geometry);
-    if (!isInside) {
-      issues.push({
-        level: "error",
-        message: `Durak "${stand.name}" (${stand.id}): koordinat, kayıtlı ili olan ${province!.name} sınırları dışında görünüyor (${latitude}, ${longitude}).`,
-      });
+    // District-level containment is a warning, not an error: ilçe borders are far thinner
+    // than il borders, so a stand near a shared edge can legitimately fall a few meters
+    // across it without the underlying data being wrong.
+    const districtGeometry = districtGeometryById.get(stand.districtId);
+    if (districtGeometry) {
+      const district = getDistrictById(stand.districtId);
+      const isInsideDistrict = isPointInGeometry([longitude, latitude], districtGeometry);
+      if (!isInsideDistrict) {
+        issues.push({
+          level: "warning",
+          message: `Durak "${stand.name}" (${stand.id}): koordinat, kayıtlı ilçesi olan ${district?.name ?? stand.districtId} sınırları dışında görünüyor (${latitude}, ${longitude}).`,
+        });
+      }
     }
   }
 
@@ -103,9 +181,6 @@ async function main() {
 
   console.log(
     `\nCoğrafi doğrulama: ${withCoordinates.length}/${stands.length} durakta koordinat var, ${errors.length} hata, ${warnings.length} uyarı.`,
-  );
-  console.log(
-    "Not: İlçe sınırı ile nokta-içinde testi (yalnızca il seviyesi değil) için ilçe poligonları henüz entegre edilmedi; aynı kaynakta admin_level=6 dosyası mevcut, ilçe id eşlemesi netleştiğinde eklenebilir.",
   );
 
   if (errors.length > 0) {

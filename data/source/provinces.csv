@@ -1,82 +1,82 @@
 id,name,slug,plateCode,officialCode,region,latitude,longitude,landlineAreaCodes,status,createdAt,updatedAt
-01,Adana,adana,1,TR-01,Akdeniz,,,0322,active,2026-07-21,2026-07-21
-02,Adıyaman,adiyaman,2,TR-02,Güneydoğu Anadolu,,,0416,active,2026-07-21,2026-07-21
-03,Afyonkarahisar,afyonkarahisar,3,TR-03,Ege,,,0272,active,2026-07-21,2026-07-21
-04,Ağrı,agri,4,TR-04,Doğu Anadolu,,,0472,active,2026-07-21,2026-07-21
-05,Amasya,amasya,5,TR-05,Karadeniz,,,0358,active,2026-07-21,2026-07-21
-06,Ankara,ankara,6,TR-06,İç Anadolu,,,0312,active,2026-07-21,2026-07-21
-07,Antalya,antalya,7,TR-07,Akdeniz,,,0242,active,2026-07-21,2026-07-21
-08,Artvin,artvin,8,TR-08,Karadeniz,,,0466,active,2026-07-21,2026-07-21
-09,Aydın,aydin,9,TR-09,Ege,,,0256,active,2026-07-21,2026-07-21
-10,Balıkesir,balikesir,10,TR-10,Marmara,,,0266,active,2026-07-21,2026-07-21
-11,Bilecik,bilecik,11,TR-11,Marmara,,,0228,active,2026-07-21,2026-07-21
-12,Bingöl,bingol,12,TR-12,Doğu Anadolu,,,0426,active,2026-07-21,2026-07-21
-13,Bitlis,bitlis,13,TR-13,Doğu Anadolu,,,0434,active,2026-07-21,2026-07-21
-14,Bolu,bolu,14,TR-14,Karadeniz,,,0374,active,2026-07-21,2026-07-21
-15,Burdur,burdur,15,TR-15,Akdeniz,,,0248,active,2026-07-21,2026-07-21
-16,Bursa,bursa,16,TR-16,Marmara,,,0224,active,2026-07-21,2026-07-21
-17,Çanakkale,canakkale,17,TR-17,Marmara,,,0286,active,2026-07-21,2026-07-21
-18,Çankırı,cankiri,18,TR-18,İç Anadolu,,,0376,active,2026-07-21,2026-07-21
-19,Çorum,corum,19,TR-19,Karadeniz,,,0364,active,2026-07-21,2026-07-21
-20,Denizli,denizli,20,TR-20,Ege,,,0258,active,2026-07-21,2026-07-21
-21,Diyarbakır,diyarbakir,21,TR-21,Güneydoğu Anadolu,,,0412,active,2026-07-21,2026-07-21
-22,Edirne,edirne,22,TR-22,Marmara,,,0284,active,2026-07-21,2026-07-21
-23,Elazığ,elazig,23,TR-23,Doğu Anadolu,,,0424,active,2026-07-21,2026-07-21
-24,Erzincan,erzincan,24,TR-24,Doğu Anadolu,,,0446,active,2026-07-21,2026-07-21
-25,Erzurum,erzurum,25,TR-25,Doğu Anadolu,,,0442,active,2026-07-21,2026-07-21
-26,Eskişehir,eskisehir,26,TR-26,İç Anadolu,,,0222,active,2026-07-21,2026-07-21
-27,Gaziantep,gaziantep,27,TR-27,Güneydoğu Anadolu,,,0342,active,2026-07-21,2026-07-21
-28,Giresun,giresun,28,TR-28,Karadeniz,,,0454,active,2026-07-21,2026-07-21
-29,Gümüşhane,gumushane,29,TR-29,Karadeniz,,,0456,active,2026-07-21,2026-07-21
-30,Hakkari,hakkari,30,TR-30,Doğu Anadolu,,,0438,active,2026-07-21,2026-07-21
-31,Hatay,hatay,31,TR-31,Akdeniz,,,0326,active,2026-07-21,2026-07-21
-32,Isparta,isparta,32,TR-32,Akdeniz,,,0246,active,2026-07-21,2026-07-21
-33,Mersin,mersin,33,TR-33,Akdeniz,,,0324,active,2026-07-21,2026-07-21
-34,İstanbul,istanbul,34,TR-34,Marmara,,,0212;0216,active,2026-07-21,2026-07-21
-35,İzmir,izmir,35,TR-35,Ege,,,0232,active,2026-07-21,2026-07-21
-36,Kars,kars,36,TR-36,Doğu Anadolu,,,0474,active,2026-07-21,2026-07-21
-37,Kastamonu,kastamonu,37,TR-37,Karadeniz,,,0366,active,2026-07-21,2026-07-21
-38,Kayseri,kayseri,38,TR-38,İç Anadolu,,,0352,active,2026-07-21,2026-07-21
-39,Kırklareli,kirklareli,39,TR-39,Marmara,,,0288,active,2026-07-21,2026-07-21
-40,Kırşehir,kirsehir,40,TR-40,İç Anadolu,,,0386,active,2026-07-21,2026-07-21
-41,Kocaeli,kocaeli,41,TR-41,Marmara,,,0262,active,2026-07-21,2026-07-21
-42,Konya,konya,42,TR-42,İç Anadolu,,,0332,active,2026-07-21,2026-07-21
-43,Kütahya,kutahya,43,TR-43,Ege,,,0274,active,2026-07-21,2026-07-21
-44,Malatya,malatya,44,TR-44,Doğu Anadolu,,,0422,active,2026-07-21,2026-07-21
-45,Manisa,manisa,45,TR-45,Ege,,,0236,active,2026-07-21,2026-07-21
-46,Kahramanmaraş,kahramanmaras,46,TR-46,Akdeniz,,,0344,active,2026-07-21,2026-07-21
-47,Mardin,mardin,47,TR-47,Güneydoğu Anadolu,,,0482,active,2026-07-21,2026-07-21
-48,Muğla,mugla,48,TR-48,Ege,,,0252,active,2026-07-21,2026-07-21
-49,Muş,mus,49,TR-49,Doğu Anadolu,,,0436,active,2026-07-21,2026-07-21
-50,Nevşehir,nevsehir,50,TR-50,İç Anadolu,,,0384,active,2026-07-21,2026-07-21
-51,Niğde,nigde,51,TR-51,İç Anadolu,,,0388,active,2026-07-21,2026-07-21
-52,Ordu,ordu,52,TR-52,Karadeniz,,,0452,active,2026-07-21,2026-07-21
-53,Rize,rize,53,TR-53,Karadeniz,,,0464,active,2026-07-21,2026-07-21
-54,Sakarya,sakarya,54,TR-54,Marmara,,,0264,active,2026-07-21,2026-07-21
-55,Samsun,samsun,55,TR-55,Karadeniz,,,0362,active,2026-07-21,2026-07-21
-56,Siirt,siirt,56,TR-56,Güneydoğu Anadolu,,,0484,active,2026-07-21,2026-07-21
-57,Sinop,sinop,57,TR-57,Karadeniz,,,0368,active,2026-07-21,2026-07-21
-58,Sivas,sivas,58,TR-58,İç Anadolu,,,0346,active,2026-07-21,2026-07-21
-59,Tekirdağ,tekirdag,59,TR-59,Marmara,,,0282,active,2026-07-21,2026-07-21
-60,Tokat,tokat,60,TR-60,Karadeniz,,,0356,active,2026-07-21,2026-07-21
-61,Trabzon,trabzon,61,TR-61,Karadeniz,,,0462,active,2026-07-21,2026-07-21
-62,Tunceli,tunceli,62,TR-62,Doğu Anadolu,,,0428,active,2026-07-21,2026-07-21
-63,Şanlıurfa,sanliurfa,63,TR-63,Güneydoğu Anadolu,,,0414,active,2026-07-21,2026-07-21
-64,Uşak,usak,64,TR-64,Ege,,,0276,active,2026-07-21,2026-07-21
-65,Van,van,65,TR-65,Doğu Anadolu,,,0432,active,2026-07-21,2026-07-21
-66,Yozgat,yozgat,66,TR-66,İç Anadolu,,,0354,active,2026-07-21,2026-07-21
-67,Zonguldak,zonguldak,67,TR-67,Karadeniz,,,0372,active,2026-07-21,2026-07-21
-68,Aksaray,aksaray,68,TR-68,İç Anadolu,,,0382,active,2026-07-21,2026-07-21
-69,Bayburt,bayburt,69,TR-69,Karadeniz,,,0458,active,2026-07-21,2026-07-21
-70,Karaman,karaman,70,TR-70,İç Anadolu,,,0338,active,2026-07-21,2026-07-21
-71,Kırıkkale,kirikkale,71,TR-71,İç Anadolu,,,0318,active,2026-07-21,2026-07-21
-72,Batman,batman,72,TR-72,Güneydoğu Anadolu,,,0488,active,2026-07-21,2026-07-21
-73,Şırnak,sirnak,73,TR-73,Güneydoğu Anadolu,,,0486,active,2026-07-21,2026-07-21
-74,Bartın,bartin,74,TR-74,Karadeniz,,,0378,active,2026-07-21,2026-07-21
-75,Ardahan,ardahan,75,TR-75,Doğu Anadolu,,,0478,active,2026-07-21,2026-07-21
-76,Iğdır,igdir,76,TR-76,Doğu Anadolu,,,0476,active,2026-07-21,2026-07-21
-77,Yalova,yalova,77,TR-77,Marmara,,,0226,active,2026-07-21,2026-07-21
-78,Karabük,karabuk,78,TR-78,Karadeniz,,,0370,active,2026-07-21,2026-07-21
-79,Kilis,kilis,79,TR-79,Güneydoğu Anadolu,,,0348,active,2026-07-21,2026-07-21
-80,Osmaniye,osmaniye,80,TR-80,Akdeniz,,,0328,active,2026-07-21,2026-07-21
-81,Düzce,duzce,81,TR-81,Karadeniz,,,0380,active,2026-07-21,2026-07-21
+01,Adana,adana,1,TR-01,Akdeniz,37.258956,35.559689,0322,active,2026-07-21,2026-07-22
+02,Adıyaman,adiyaman,2,TR-02,Güneydoğu Anadolu,37.793188,38.287758,0416,active,2026-07-21,2026-07-22
+03,Afyonkarahisar,afyonkarahisar,3,TR-03,Ege,38.631881,30.647768,0272,active,2026-07-21,2026-07-22
+04,Ağrı,agri,4,TR-04,Doğu Anadolu,39.553563,43.256383,0472,active,2026-07-21,2026-07-22
+05,Amasya,amasya,5,TR-05,Karadeniz,40.712569,35.712119,0358,active,2026-07-21,2026-07-22
+06,Ankara,ankara,6,TR-06,İç Anadolu,39.798262,32.580298,0312,active,2026-07-21,2026-07-22
+07,Antalya,antalya,7,TR-07,Akdeniz,36.804022,30.921124,0242,active,2026-07-21,2026-07-22
+08,Artvin,artvin,8,TR-08,Karadeniz,41.156444,41.773674,0466,active,2026-07-21,2026-07-22
+09,Aydın,aydin,9,TR-09,Ege,37.727683,27.937876,0256,active,2026-07-21,2026-07-22
+10,Balıkesir,balikesir,10,TR-10,Marmara,39.799523,27.805503,0266,active,2026-07-21,2026-07-22
+11,Bilecik,bilecik,11,TR-11,Marmara,40.109536,30.103064,0228,active,2026-07-21,2026-07-22
+12,Bingöl,bingol,12,TR-12,Doğu Anadolu,39.039018,40.642477,0426,active,2026-07-21,2026-07-22
+13,Bitlis,bitlis,13,TR-13,Doğu Anadolu,38.529974,42.377578,0434,active,2026-07-21,2026-07-22
+14,Bolu,bolu,14,TR-14,Karadeniz,40.595502,31.612145,0374,active,2026-07-21,2026-07-22
+15,Burdur,burdur,15,TR-15,Akdeniz,37.412648,30.085767,0248,active,2026-07-21,2026-07-22
+16,Bursa,bursa,16,TR-16,Marmara,40.179291,28.964914,0224,active,2026-07-21,2026-07-22
+17,Çanakkale,canakkale,17,TR-17,Marmara,40.054867,26.608547,0286,active,2026-07-21,2026-07-22
+18,Çankırı,cankiri,18,TR-18,İç Anadolu,40.682563,33.458039,0376,active,2026-07-21,2026-07-22
+19,Çorum,corum,19,TR-19,Karadeniz,40.566493,34.672901,0364,active,2026-07-21,2026-07-22
+20,Denizli,denizli,20,TR-20,Ege,37.736202,29.271978,0258,active,2026-07-21,2026-07-22
+21,Diyarbakır,diyarbakir,21,TR-21,Güneydoğu Anadolu,38.099699,40.345408,0412,active,2026-07-21,2026-07-22
+22,Edirne,edirne,22,TR-22,Marmara,41.168661,26.563335,0284,active,2026-07-21,2026-07-22
+23,Elazığ,elazig,23,TR-23,Doğu Anadolu,38.656776,39.391028,0424,active,2026-07-21,2026-07-22
+24,Erzincan,erzincan,24,TR-24,Doğu Anadolu,39.663524,39.292290,0446,active,2026-07-21,2026-07-22
+25,Erzurum,erzurum,25,TR-25,Doğu Anadolu,40.063580,41.547679,0442,active,2026-07-21,2026-07-22
+26,Eskişehir,eskisehir,26,TR-26,İç Anadolu,39.601654,31.070974,0222,active,2026-07-21,2026-07-22
+27,Gaziantep,gaziantep,27,TR-27,Güneydoğu Anadolu,37.085767,37.368896,0342,active,2026-07-21,2026-07-22
+28,Giresun,giresun,28,TR-28,Karadeniz,40.698608,38.586721,0454,active,2026-07-21,2026-07-22
+29,Gümüşhane,gumushane,29,TR-29,Karadeniz,40.336819,39.381296,0456,active,2026-07-21,2026-07-22
+30,Hakkari,hakkari,30,TR-30,Doğu Anadolu,37.458458,44.068169,0438,active,2026-07-21,2026-07-22
+31,Hatay,hatay,31,TR-31,Akdeniz,36.428273,36.252967,0326,active,2026-07-21,2026-07-22
+32,Isparta,isparta,32,TR-32,Akdeniz,37.929297,30.940366,0246,active,2026-07-21,2026-07-22
+33,Mersin,mersin,33,TR-33,Akdeniz,36.563842,33.801602,0324,active,2026-07-21,2026-07-22
+34,İstanbul,istanbul,34,TR-34,Marmara,41.157094,28.842039,0212;0216,active,2026-07-21,2026-07-22
+35,İzmir,izmir,35,TR-35,Ege,38.481529,27.135203,0232,active,2026-07-21,2026-07-22
+36,Kars,kars,36,TR-36,Doğu Anadolu,40.453271,43.063000,0474,active,2026-07-21,2026-07-22
+37,Kastamonu,kastamonu,37,TR-37,Karadeniz,41.594012,33.660464,0366,active,2026-07-21,2026-07-22
+38,Kayseri,kayseri,38,TR-38,İç Anadolu,38.603796,35.833673,0352,active,2026-07-21,2026-07-22
+39,Kırklareli,kirklareli,39,TR-39,Marmara,41.693664,27.543344,0288,active,2026-07-21,2026-07-22
+40,Kırşehir,kirsehir,40,TR-40,İç Anadolu,39.313405,34.117883,0386,active,2026-07-21,2026-07-22
+41,Kocaeli,kocaeli,41,TR-41,Marmara,40.941037,29.938251,0262,active,2026-07-21,2026-07-22
+42,Konya,konya,42,TR-42,İç Anadolu,38.040336,32.590679,0332,active,2026-07-21,2026-07-22
+43,Kütahya,kutahya,43,TR-43,Ege,39.295391,29.576979,0274,active,2026-07-21,2026-07-22
+44,Malatya,malatya,44,TR-44,Doğu Anadolu,38.516236,38.128023,0422,active,2026-07-21,2026-07-22
+45,Manisa,manisa,45,TR-45,Ege,38.759662,28.127416,0236,active,2026-07-21,2026-07-22
+46,Kahramanmaraş,kahramanmaras,46,TR-46,Akdeniz,37.888051,36.951207,0344,active,2026-07-21,2026-07-22
+47,Mardin,mardin,47,TR-47,Güneydoğu Anadolu,37.338046,40.837743,0482,active,2026-07-21,2026-07-22
+48,Muğla,mugla,48,TR-48,Ege,36.907400,28.370345,0252,active,2026-07-21,2026-07-22
+49,Muş,mus,49,TR-49,Doğu Anadolu,39.004307,41.850775,0436,active,2026-07-21,2026-07-22
+50,Nevşehir,nevsehir,50,TR-50,İç Anadolu,38.788827,34.717399,0384,active,2026-07-21,2026-07-22
+51,Niğde,nigde,51,TR-51,İç Anadolu,37.899526,34.681855,0388,active,2026-07-21,2026-07-22
+52,Ordu,ordu,52,TR-52,Karadeniz,40.897704,37.544992,0452,active,2026-07-21,2026-07-22
+53,Rize,rize,53,TR-53,Karadeniz,41.024721,40.800517,0464,active,2026-07-21,2026-07-22
+54,Sakarya,sakarya,54,TR-54,Marmara,40.824081,30.536622,0264,active,2026-07-21,2026-07-22
+55,Samsun,samsun,55,TR-55,Karadeniz,41.326027,36.108149,0362,active,2026-07-21,2026-07-22
+56,Siirt,siirt,56,TR-56,Güneydoğu Anadolu,37.912658,42.125273,0484,active,2026-07-21,2026-07-22
+57,Sinop,sinop,57,TR-57,Karadeniz,41.784977,34.917146,0368,active,2026-07-21,2026-07-22
+58,Sivas,sivas,58,TR-58,İç Anadolu,39.564824,37.286871,0346,active,2026-07-21,2026-07-22
+59,Tekirdağ,tekirdag,59,TR-59,Marmara,41.016271,27.448685,0282,active,2026-07-21,2026-07-22
+60,Tokat,tokat,60,TR-60,Karadeniz,40.369625,36.567981,0356,active,2026-07-21,2026-07-22
+61,Trabzon,trabzon,61,TR-61,Karadeniz,40.903845,39.778377,0462,active,2026-07-21,2026-07-22
+62,Tunceli,tunceli,62,TR-62,Doğu Anadolu,39.191422,39.481437,0428,active,2026-07-21,2026-07-22
+63,Şanlıurfa,sanliurfa,63,TR-63,Güneydoğu Anadolu,37.246245,39.099749,0414,active,2026-07-21,2026-07-22
+64,Uşak,usak,64,TR-64,Ege,38.575616,29.362346,0276,active,2026-07-21,2026-07-22
+65,Van,van,65,TR-65,Doğu Anadolu,38.464119,43.588415,0432,active,2026-07-21,2026-07-22
+66,Yozgat,yozgat,66,TR-66,İç Anadolu,39.658755,35.232016,0354,active,2026-07-21,2026-07-22
+67,Zonguldak,zonguldak,67,TR-67,Karadeniz,41.358139,31.729526,0372,active,2026-07-21,2026-07-22
+68,Aksaray,aksaray,68,TR-68,İç Anadolu,38.447644,33.841428,0382,active,2026-07-21,2026-07-22
+69,Bayburt,bayburt,69,TR-69,Karadeniz,40.257430,40.186473,0458,active,2026-07-21,2026-07-22
+70,Karaman,karaman,70,TR-70,İç Anadolu,37.089360,33.276040,0338,active,2026-07-21,2026-07-22
+71,Kırıkkale,kirikkale,71,TR-71,İç Anadolu,39.860056,33.699623,0318,active,2026-07-21,2026-07-22
+72,Batman,batman,72,TR-72,Güneydoğu Anadolu,37.958223,41.379310,0488,active,2026-07-21,2026-07-22
+73,Şırnak,sirnak,73,TR-73,Güneydoğu Anadolu,37.459985,42.519922,0486,active,2026-07-21,2026-07-22
+74,Bartın,bartin,74,TR-74,Karadeniz,41.677632,32.470057,0378,active,2026-07-21,2026-07-22
+75,Ardahan,ardahan,75,TR-75,Doğu Anadolu,41.120503,42.804034,0478,active,2026-07-21,2026-07-22
+76,Iğdır,igdir,76,TR-76,Doğu Anadolu,39.895045,43.985124,0476,active,2026-07-21,2026-07-22
+77,Yalova,yalova,77,TR-77,Marmara,40.627734,29.041485,0226,active,2026-07-21,2026-07-22
+78,Karabük,karabuk,78,TR-78,Karadeniz,41.181966,32.640515,0370,active,2026-07-21,2026-07-22
+79,Kilis,kilis,79,TR-79,Güneydoğu Anadolu,36.799951,37.127333,0348,active,2026-07-21,2026-07-22
+80,Osmaniye,osmaniye,80,TR-80,Akdeniz,37.283814,36.260269,0328,active,2026-07-21,2026-07-22
+81,Düzce,duzce,81,TR-81,Karadeniz,40.922006,31.213594,0380,active,2026-07-21,2026-07-22
