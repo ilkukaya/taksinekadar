@@ -46,12 +46,14 @@ const description = `${province.name} iline bağlı ${locativeOf(district.name)}
 
 const meta = buildPageMeta({ title, description, path });
 
+const standPath = (stand: TaxiStand) => `/${province.slug}/${district.slug}/${stand.slug}/`;
+
 const structuredData = [
   buildCollectionPageSchema({
     name: `${district.name} Taksi Durakları`,
     description,
     path,
-    itemList: sortedStands.slice(0, 200).map((s) => ({ name: s.name, path: `${path}#${s.slug}` })),
+    itemList: sortedStands.slice(0, 200).map((s) => ({ name: s.name, path: standPath(s) })),
   }),
 ];
 ---
@@ -80,7 +82,9 @@ const structuredData = [
       {
         sortedStands.map((stand) => (
           <div id={stand.slug} class="card">
-            <p class="text-ink-900 font-semibold">{stand.name}</p>
+            <a href={standPath(stand)} class="text-ink-900 font-semibold hover:underline">
+              {stand.name}
+            </a>
             {stand.address && <p class="text-ink-600 mt-1 text-sm">{stand.address}</p>}
             {stand.phonePrimary && (
               <p class="mt-1 text-sm">
@@ -91,9 +95,6 @@ const structuredData = [
                   {stand.phonePrimary}
                 </a>
               </p>
-            )}
-            {!stand.phonePrimary && (
-              <p class="text-ink-400 mt-1 text-sm">Telefon numarası bu kaynakta doğrulanamadı.</p>
             )}
             <p class="mt-1">
               <a
@@ -109,16 +110,6 @@ const structuredData = [
         ))
       }
     </div>
-
-    <section class="mt-10">
-      <p class="text-ink-400 text-xs">
-        Kaynak: taksi724.com üzerinden derlenmiş durak dizini. Bu durak/telefon bilgileri belediye
-        veya resmî bir kaynaktan ayrıca doğrulanmamıştır; taşınma, kapanma veya numara değişikliği
-        olabilir.{" "}
-        <a href="/yasal/veri-kaynaklari/" class="underline"> Veri kaynakları hakkında </a>
-        .
-      </p>
-    </section>
 
     <section class="mt-6">
       <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">

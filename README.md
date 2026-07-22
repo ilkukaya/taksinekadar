@@ -118,10 +118,13 @@ API'sine **sitede** bağımlı kalmaktır, tek seferlik insan doğrulaması değ
 
 ### 2.3 Taksi durağı verisi
 
-`/taksi-duraklari/` altında 77 il ve 733 ilçede toplam **8285 taksi durağı** yayındadır
-(`/{il}/taksi-duraklari/` il indeksi ve `/{il}/{ilce}/taksi-duraklari/` ilçe listeleri).
-Bayburt, Bartın, Iğdır ve Kilis için kaynakta hiç kayıt yoktu; bu 4 il henüz durak verisi
-göstermiyor.
+`/taksi-duraklari/` altında 77 il ve 733 ilçede toplam **8285 taksi durağı** yayındadır:
+`/{il}/taksi-duraklari/` il indeksi, `/{il}/{ilce}/taksi-duraklari/` ilçe listesi, ve her durağın
+kendi kalıcı sayfası `/{il}/{ilce}/{durak-slug}/` (rakip sitenin URL biçimiyle aynı — her durak
+tek başına indexlenebilir, TaxiStand schema.org işaretlemesi taşır). Aynı ilçede aynı isme sahip
+75 durak çifti (ör. iki farklı "Merkez Taksi Durağı"), title/description çakışmasını önlemek için
+otomatik olarak numaralandırılır ("Merkez Taksi Durağı 2"). Bayburt, Bartın, Iğdır ve Kilis için
+kaynakta hiç kayıt yoktu; bu 4 il henüz durak verisi göstermiyor.
 
 **Kaynak ve yöntem:** Bu veri OSM/belediye açık veri portalından değil, kullanıcının
 taksi724.com'dan derleyip temizlediği bir CSV dışa aktarımından geldi
@@ -241,7 +244,8 @@ tests/e2e/         Playwright uçtan uca testleri
 /yasal/iletisim/
 /taksi-duraklari/                  81 il listesi (durağı olan/olmayan, bkz. 2.3)
 /{il}/taksi-duraklari/             İl içindeki ilçelerin durak sayısı listesi (durağı olan 77 il)
-/{il}/{ilce}/taksi-duraklari/      İlçedeki durakların adı/adres/telefonu (733 ilçe)
+/{il}/{ilce}/taksi-duraklari/      İlçedeki durakların listesi (733 ilçe)
+/{il}/{ilce}/{durak-slug}/         Tek bir durağın kendi sayfası (8285 durak, TaxiStand schema)
 /404
 ```
 

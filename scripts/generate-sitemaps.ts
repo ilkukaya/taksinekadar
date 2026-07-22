@@ -106,6 +106,7 @@ function main() {
   ];
 
   const durakUrls: SitemapUrl[] = [{ loc: canonicalUrl("/taksi-duraklari/") }];
+  const standUrls: SitemapUrl[] = [];
   for (const province of provinces) {
     if (getTaxiStandsByProvince(province.id).length === 0) continue;
     durakUrls.push({ loc: canonicalUrl(`/${province.slug}/taksi-duraklari/`) });
@@ -120,6 +121,12 @@ function main() {
         loc: canonicalUrl(`/${province.slug}/${district.slug}/taksi-duraklari/`),
         lastmod: latest,
       });
+      for (const stand of stands) {
+        standUrls.push({
+          loc: canonicalUrl(`/${province.slug}/${district.slug}/${stand.slug}/`),
+          lastmod: stand.updatedAt,
+        });
+      }
     }
   }
 
@@ -131,6 +138,7 @@ function main() {
     "rota.xml": rotaUrls,
     "guides.xml": guideUrls,
     "duraklar.xml": durakUrls,
+    "duraklar-detay.xml": standUrls,
   };
 
   for (const [filename, urls] of Object.entries(sitemaps)) {

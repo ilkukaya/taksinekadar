@@ -31,3 +31,12 @@ test("top-level taxi-duraklari index links to a province page", async ({ page })
 
   await expect(page).toHaveURL(/\/adana\/taksi-duraklari\/$/);
 });
+
+test("individual stand page has its own URL with a working tel: link", async ({ page }) => {
+  await page.goto("/adana/ceyhan/taksi-duraklari/");
+  await page.getByRole("link", { name: "Ceyhan Ada Taksi" }).click();
+
+  await expect(page).toHaveURL(/\/adana\/ceyhan\/ceyhan-ada-taksi-duragi\/$/);
+  await expect(page.locator("h1")).toHaveText("Ceyhan Ada Taksi");
+  await expect(page.locator('a[href^="tel:"]')).toBeVisible();
+});

@@ -1,0 +1,154 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta, withBrandSuffix } from "../../../lib/seo/meta";
+import { canonicalUrl } from "../../../config/site";
+import { getActiveProvinces } from "../../../lib/repositories/provinces";
+import { getDistrictsByProvince } from "../../../lib/repositories/districts";
+import { getTaxiStandsByDistrict } from "../../../lib/repositories/taxi-stands";
+import { formatPhoneForTel } from "../../../lib/utils/format";
+import type { Province, District, TaxiStand } from "../../../lib/validation/schemas";
+
+export function getStaticPaths() {
+  const paths: {
+    params: { il: string; ilce: string; durak: string };
+    props: { province: Province; district: District; stand: TaxiStand; disambiguator: string };
+  }[] = [];
+
+  for (const province of getActiveProvinces()) {
+    for (const district of getDistrictsByProvince(province.id)) {
+      const stands = getTaxiStandsByDistrict(district.id);
+      if (stands.length === 0) continue;
+
+      // A handful of districts have two genuinely different stands sharing the exact same
+      // name — sort by slug (stable/unique) and number the 2nd+ occurrence so every page's
+      // title/description stays unique (the build fails otherwise, see generate-build-report.ts).
+      const byName = new Map<string, TaxiStand[]>();
+      for (const s of stands) {
+        const group = byName.get(s.name) ?? [];
+        group.push(s);
+        byName.set(s.name, group);
+      }
+      for (const group of byName.values()) {
+        group.sort((a, b) => a.slug.localeCompare(b.slug));
+      }
+
+      for (const stand of stands) {
+        const group = byName.get(stand.name)!;
+        const index = group.indexOf(stand);
+        const disambiguator = index > 0 ? ` ${index + 1}` : "";
+        paths.push({
+          params: { il: province.slug, ilce: district.slug, durak: stand.slug },
+          props: { province, district, stand, disambiguator },
+        });
+      }
+    }
+  }
+  return paths;
+}
+
+const { province, district, stand, disambiguator } = Astro.props as {
+  province: Province;
+  district: District;
+  stand: TaxiStand;
+  disambiguator: string;
+};
+
+const displayName = `${stand.name}${disambiguator}`;
+const path = `/${province.slug}/${district.slug}/${stand.slug}/`;
+// district+province are always part of both title and description — never dropped even when
+// an address is present — since a generic name+street pattern ("Merkez Taksi Durağı", "No:1")
+// can otherwise repeat verbatim across unrelated towns and collide (see build's duplicate check).
+const title = withBrandSuffix(`${displayName} — ${district.name}, ${province.name}`);
+const description = stand.address
+  ? `${displayName} taksi durağı — ${district.name}, ${province.name} — ${stand.address}${stand.phonePrimary ? ` · ${stand.phonePrimary}` : ""}`
+  : `${displayName} taksi durağı, ${district.name}, ${province.name}${stand.phonePrimary ? ` · ${stand.phonePrimary}` : ""}`;
+
+const meta = buildPageMeta({ title, description, path });
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "TaxiStand",
+    name: displayName,
+    url: canonicalUrl(path),
+    ...(stand.address && {
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: stand.address,
+        addressLocality: district.name,
+        addressRegion: province.name,
+        addressCountry: "TR",
+      },
+    }),
+    ...(stand.phonePrimary && { telephone: stand.phonePrimary }),
+  },
+];
+---
+
+<BaseLayout meta={meta} structuredData={structuredData}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Taksi Durakları", path: "/taksi-duraklari/" },
+      { name: province.name, path: `/${province.slug}/taksi-duraklari/` },
+      { name: district.name, path: `/${province.slug}/${district.slug}/taksi-duraklari/` },
+      { name: displayName, path },
+    ]}
+  />
+
+  <section class="mx-auto max-w-2xl px-4 py-10">
+    <h1 class="text-ink-900 text-3xl font-bold">{displayName}</h1>
+    <p class="text-ink-500 mt-1">
+      {district.name}, {province.name}
+    </p>
+
+    <div class="card mt-6">
+      {
+        stand.address && (
+          <p class="text-ink-700">
+            <span class="text-ink-500 text-sm">Adres</span>
+            <br />
+            {stand.address}
+          </p>
+        )
+      }
+      {
+        stand.phonePrimary && (
+          <p class="mt-4">
+            <span class="text-ink-500 text-sm">Telefon</span>
+            <br />
+            <a
+              href={`tel:${formatPhoneForTel(stand.phonePrimary)}`}
+              class="text-ink-800 text-lg font-semibold underline"
+            >
+              {stand.phonePrimary}
+            </a>
+          </p>
+        )
+      }
+      <p class="mt-4">
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stand.mapQuery ?? displayName)}`}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          class="text-ink-800 font-medium underline"
+        >
+          Haritada ara →
+        </a>
+      </p>
+    </div>
+
+    <section class="mt-8 flex flex-col gap-2">
+      <a
+        href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
+        class="text-ink-800 font-medium underline"
+      >
+        {district.name} ilçesindeki diğer taksi durakları →
+      </a>
+      <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">
+        {province.name} taksi ücreti sayfasına git →
+      </a>
+    </section>
+  </section>
+</BaseLayout>
