@@ -1,13 +1,20 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Breadcrumb from "../../../components/navigation/Breadcrumb.astro";
+import TariffSummary from "../../../components/tariffs/TariffSummary.astro";
+import EstimatedTariffSummary from "../../../components/tariffs/EstimatedTariffSummary.astro";
 import { buildPageMeta, withBrandSuffix } from "../../../lib/seo/meta";
+import { buildFaqPageSchema, type FaqEntry } from "../../../lib/schema/faq-page";
 import { canonicalUrl } from "../../../config/site";
 import { getActiveProvinces } from "../../../lib/repositories/provinces";
 import { getDistrictsByProvince } from "../../../lib/repositories/districts";
 import { getTaxiStandsByDistrict } from "../../../lib/repositories/taxi-stands";
-import { formatPhoneForTel } from "../../../lib/utils/format";
+import { getActiveTariff, getProvisionalTariff } from "../../../lib/repositories/tariffs";
+import { formatPhoneForTel, formatCurrencyTRY } from "../../../lib/utils/format";
+import { locativeOf, relativeLocativeOf } from "../../../lib/language/turkish-suffix";
 import type { Province, District, TaxiStand } from "../../../lib/validation/schemas";
+
+const OTHER_STANDS_SHOWN = 8;
 
 export function getStaticPaths() {
   const paths: {
@@ -66,12 +73,62 @@ const description = stand.address
 
 const meta = buildPageMeta({ title, description, path });
 
+const standPath = (s: TaxiStand) => `/${province.slug}/${district.slug}/${s.slug}/`;
+const mapSearchQuery = stand.mapQuery ?? `${displayName}, ${district.name}, ${province.name}`;
+const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapSearchQuery)}`;
+const yandexMapsUrl = `https://yandex.com/maps/?text=${encodeURIComponent(mapSearchQuery)}`;
+
+const districtStands = getTaxiStandsByDistrict(district.id);
+const otherStands = districtStands
+  .filter((s) => s.id !== stand.id)
+  .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+const districtStandCount = districtStands.length;
+
+// A district-specific override (e.g. Alanya/Gazipaşa/Cide) always wins over the province-wide
+// figure; a calculator-derived estimate only fills in when there's no verified tariff at all
+// for either — see getProvisionalTariff's doc comment. Never presented as verified.
+const tariff = getActiveTariff(province.id, "yellow", district.id);
+const provisionalTariff = tariff ? undefined : getProvisionalTariff(province.id);
+const displayTariff = tariff ?? provisionalTariff;
+const tariffLocationName = tariff?.districtId ? district.name : province.name;
+
+const faqs: FaqEntry[] = [
+  {
+    question: `${displayName} nerede?`,
+    answer: stand.address
+      ? `${displayName}, ${province.name} iline bağlı ${district.name} ilçesinde, ${stand.address} adresinde yer alır.`
+      : `${displayName}, ${province.name} iline bağlı ${district.name} ilçesinde yer alan bir taksi durağıdır.`,
+  },
+  {
+    question: `${displayName} telefon numarası nedir?`,
+    answer: stand.phonePrimary
+      ? `${displayName} telefon numarası: ${stand.phonePrimary}.`
+      : `${displayName} için kayıtlı bir telefon numarası bulunmuyor. Haritadaki konumuna bakabilir veya ${district.name} ilçesindeki diğer duraklarla iletişime geçebilirsiniz.`,
+  },
+  {
+    question: `${locativeOf(district.name)} başka taksi durağı var mı?`,
+    answer:
+      otherStands.length > 0
+        ? `Evet, ${district.name} ilçesinde ${displayName} dışında ${otherStands.length} taksi durağı daha bulunuyor.`
+        : `Hayır, ${district.name} ilçesinde kayıtlı tek taksi durağı ${displayName}'dır.`,
+  },
+];
+if (displayTariff) {
+  faqs.push({
+    question: `${district.name} taksi ücreti ne kadar?`,
+    answer: provisionalTariff
+      ? `${locativeOf(district.name)} tahmini taksi açılış ücreti ${formatCurrencyTRY(displayTariff.openingFee)}, kilometre ücreti ${formatCurrencyTRY(displayTariff.pricePerKm)} civarındadır; bu rakam resmî bir belediye/UKOME kararıyla ayrıca doğrulanmamıştır.`
+      : `${locativeOf(district.name)} güncel taksi açılış ücreti ${formatCurrencyTRY(displayTariff.openingFee)}, kilometre ücreti ${formatCurrencyTRY(displayTariff.pricePerKm)} ve minimum/indi-bindi ücreti ${formatCurrencyTRY(displayTariff.minimumFare)}'dir.`,
+  });
+}
+
 const structuredData = [
   {
     "@context": "https://schema.org",
     "@type": "TaxiStand",
     name: displayName,
     url: canonicalUrl(path),
+    description: faqs[0]!.answer,
     ...(stand.address && {
       address: {
         "@type": "PostalAddress",
@@ -83,6 +140,7 @@ const structuredData = [
     }),
     ...(stand.phonePrimary && { telephone: stand.phonePrimary }),
   },
+  buildFaqPageSchema(faqs),
 ];
 ---
 
@@ -127,19 +185,147 @@ const structuredData = [
           </p>
         )
       }
-      <p class="mt-4">
+      <div class="mt-4 flex flex-wrap gap-3">
         <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stand.mapQuery ?? displayName)}`}
+          href={googleMapsUrl}
           target="_blank"
           rel="noopener noreferrer nofollow"
           class="text-ink-800 font-medium underline"
         >
-          Haritada ara →
+          Google Maps'te ara →
         </a>
-      </p>
+        <a
+          href={yandexMapsUrl}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          class="text-ink-800 font-medium underline"
+        >
+          Yandex Haritalar'da ara →
+        </a>
+      </div>
     </div>
 
-    <section class="mt-8 flex flex-col gap-2">
+    <section class="mt-10">
+      <h2 class="text-ink-900 text-xl font-bold">{displayName} Hakkında</h2>
+      <p class="text-ink-700 mt-3 leading-relaxed">
+        {
+          `${displayName}, ${province.name} ilinin ${district.name} ilçesinde yer alan bir taksi durağıdır.`
+        }
+        {stand.address && ` ${stand.address} adresinde hizmet vermektedir.`}
+        {` ${district.name} ilçesinde, bu durak dahil toplamda `}
+        <strong>{districtStandCount}</strong>
+        {" taksi durağı bulunmaktadır."}
+      </p>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-ink-900 text-xl font-bold">{displayName} Nasıl Çağrılır?</h2>
+      {
+        stand.phonePrimary ? (
+          <ol class="text-ink-700 mt-3 list-inside list-decimal space-y-2 leading-relaxed">
+            <li>
+              Telefonla arayın:{" "}
+              <a
+                href={`tel:${formatPhoneForTel(stand.phonePrimary)}`}
+                class="text-ink-800 font-medium underline"
+              >
+                {stand.phonePrimary}
+              </a>
+            </li>
+            <li>Bulunduğunuz adresi veya size en yakın belirgin noktayı net şekilde belirtin.</li>
+            <li>Size yönlendirilecek taksiyi bekleyin.</li>
+          </ol>
+        ) : (
+          <p class="text-ink-700 mt-3 leading-relaxed">
+            Bu durak için kayıtlı bir telefon numarası bulunmuyor. Haritada arayarak konumunu
+            görüntüleyebilir veya{" "}
+            <a
+              href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
+              class="text-ink-800 font-medium underline"
+            >
+              {district.name} ilçesindeki diğer duraklara
+            </a>{" "}
+            ulaşabilirsiniz.
+          </p>
+        )
+      }
+    </section>
+
+    {
+      displayTariff && (
+        <section class="mt-10">
+          <h2 class="text-ink-900 text-xl font-bold">{district.name} Taksi Ücretleri</h2>
+          <div class="mt-3">
+            {provisionalTariff ? (
+              <EstimatedTariffSummary locationName={tariffLocationName} tariff={displayTariff} />
+            ) : (
+              <TariffSummary locationName={tariffLocationName} tariff={displayTariff} />
+            )}
+          </div>
+          <a
+            href={`/${province.slug}-taksi-ucreti/`}
+            class="text-ink-800 mt-3 inline-block font-medium underline"
+          >
+            Mesafeye göre ücret hesapla →
+          </a>
+        </section>
+      )
+    }
+
+    <section class="mt-10">
+      <h2 class="text-ink-900 text-xl font-bold">
+        {relativeLocativeOf(district.name)} Diğer Taksi Durakları
+      </h2>
+      {
+        otherStands.length > 0 ? (
+          <>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+              {otherStands.slice(0, OTHER_STANDS_SHOWN).map((s) => (
+                <a href={standPath(s)} class="card block hover:shadow-sm">
+                  <p class="text-ink-900 font-medium">{s.name}</p>
+                  {s.phonePrimary && <p class="text-ink-500 mt-1 text-sm">{s.phonePrimary}</p>}
+                </a>
+              ))}
+            </div>
+            <a
+              href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
+              class="text-ink-800 mt-4 inline-block font-medium underline"
+            >
+              {district.name} ilçesindeki tüm {districtStandCount} durağı gör →
+            </a>
+          </>
+        ) : (
+          <p class="text-ink-700 mt-3 leading-relaxed">
+            {district.name} ilçesinde kayıtlı başka taksi durağı bulunmuyor — {displayName} bu
+            ilçedeki tek kayıtlı durak.
+          </p>
+        )
+      }
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-ink-900 text-xl font-bold">Sık Sorulan Sorular</h2>
+      <div class="mt-3 space-y-2">
+        {
+          faqs.map((faq) => (
+            <details class="card group">
+              <summary class="text-ink-900 flex cursor-pointer list-none items-center justify-between gap-3 font-medium marker:content-none [&::-webkit-details-marker]:hidden">
+                <span>{faq.question}</span>
+                <span
+                  class="text-ink-400 shrink-0 transition-transform group-open:rotate-180"
+                  aria-hidden="true"
+                >
+                  ⌄
+                </span>
+              </summary>
+              <p class="text-ink-600 mt-2 leading-relaxed">{faq.answer}</p>
+            </details>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="mt-10 flex flex-col gap-2">
       <a
         href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
         class="text-ink-800 font-medium underline"

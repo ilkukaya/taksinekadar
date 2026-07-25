@@ -172,6 +172,19 @@ tek başına indexlenebilir, TaxiStand schema.org işaretlemesi taşır). Aynı 
 otomatik olarak numaralandırılır ("Merkez Taksi Durağı 2"). Bayburt, Bartın, Iğdır ve Kilis için
 kaynakta hiç kayıt yoktu; bu 4 il henüz durak verisi göstermiyor.
 
+**Durak sayfası içerik zenginleştirmesi (SEO/AEO/GEO):** Her durak sayfası artık yalnızca
+ad/adres/telefon değil, tamamen elimizdeki gerçek veriden türetilmiş, sayfadan sayfaya genuine
+şekilde değişen ek bölümler içerir — "Hakkında" (il/ilçe/adres, ilçedeki toplam durak sayısı),
+"Nasıl Çağrılır" (telefon varsa adım adım, yoksa dürüst bir alternatif), ilçenin gerçek tarifesi
+(ilçeye özel bir tarife varsa o, yoksa il geneli — doğrulanmış/tahmini ayrımı burada da korunur),
+aynı ilçedeki diğer durakların bir kısmı (gerçek veri, dahili linkleme), ve 3-4 soruluk bir
+Sık Sorulan Sorular bölümü (`FAQPage` schema.org işaretlemesiyle, görünen metinle birebir
+eşleşecek şekilde). Hiçbir cümle uydurma bir gerçek içermez — bilinmeyen alanlar (çalışma
+saatleri, konum koordinatı, yorum/puan) kaynakta hiç yoktur ve sahte doldurulmadan atlanır;
+sahte kullanıcı yorumu/puanı da eklenmedi (Google'ın structured-data politikası buna izin
+vermiyor). `src/lib/language/turkish-suffix.ts`'e bu iş için eklenen `relativeLocativeOf`
+("-DAki" eki) fonksiyonu ayrı test edilmiştir.
+
 **Kaynak ve yöntem:** Bu veri OSM/belediye açık veri portalından değil, kullanıcının
 taksi724.com'dan derleyip temizlediği bir CSV dışa aktarımından geldi
 (`data/raw/taksi724-duraklari-kaynak.csv`, git-ignored; `scripts/import-taksi724.ts` ile

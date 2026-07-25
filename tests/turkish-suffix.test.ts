@@ -9,6 +9,7 @@ import {
   dativeOf,
   ablativeOf,
   genitiveOf,
+  relativeLocativeOf,
 } from "../src/lib/language/turkish-suffix";
 
 describe("formatProperNounSuffix", () => {
@@ -145,6 +146,22 @@ describe("suffix logic on synthetic words (exercises ç/h/f devoicing not presen
 
   it("does not devoice after a voiced consonant", () => {
     expect(getLocativeSuffix("Erzurum")).toBe("da");
+  });
+});
+
+describe("relativeLocativeOf — the -ki suffix itself never follows harmony", () => {
+  const cases: [string, string][] = [
+    ["Konya", "Konya'daki"],
+    ["İzmir", "İzmir'deki"],
+    ["Beşiktaş", "Beşiktaş'taki"],
+    ["Edremit", "Edremit'teki"],
+    ["Kadıköy", "Kadıköy'deki"],
+    ["Söğüt", "Söğüt'teki"],
+    ["Sinop", "Sinop'taki"],
+  ];
+
+  it.each(cases)("%s -> %s", (word, expected) => {
+    expect(relativeLocativeOf(word)).toBe(expected);
   });
 });
 

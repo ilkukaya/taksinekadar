@@ -134,3 +134,13 @@ export function ablativeOf(word: string): string {
 export function genitiveOf(word: string): string {
   return formatProperNounSuffix(word, getGenitiveSuffix(word));
 }
+
+/**
+ * Relative/locative-attributive (-DAki): "içindeki" sense, e.g. "Konya'daki" (the one in
+ * Konya), "İzmir'deki" (the one in İzmir). The locative part still follows two-way harmony
+ * (getLocativeSuffix); the trailing "-ki" itself is a well-known Turkish harmony exception
+ * and is never spelled "-kı"/"-kü" regardless of the stem's vowels.
+ */
+export function relativeLocativeOf(word: string): string {
+  return formatProperNounSuffix(word, `${getLocativeSuffix(word)}ki`);
+}

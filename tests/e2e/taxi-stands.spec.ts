@@ -38,5 +38,20 @@ test("individual stand page has its own URL with a working tel: link", async ({ 
 
   await expect(page).toHaveURL(/\/adana\/ceyhan\/ceyhan-ada-taksi-duragi\/$/);
   await expect(page.locator("h1")).toHaveText("Ceyhan Ada Taksi");
-  await expect(page.locator('a[href^="tel:"]')).toBeVisible();
+  // The number appears twice by design (info card + "nasıl çağrılır" step list).
+  await expect(page.locator('a[href^="tel:"]').first()).toBeVisible();
+});
+
+test("individual stand page shows an FAQ, sibling stands, and district fare info", async ({
+  page,
+}) => {
+  await page.goto("/adana/ceyhan/ceyhan-ada-taksi-duragi/");
+
+  await expect(page.getByRole("heading", { name: "Sık Sorulan Sorular" })).toBeVisible();
+  await expect(page.getByText("Ceyhan Ada Taksi nerede?")).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Diğer Taksi Durakları/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Taksi Ücretleri/ })).toBeVisible();
+
+  const schemaBlocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(schemaBlocks.some((block) => JSON.parse(block)["@type"] === "FAQPage")).toBe(true);
 });

@@ -54,7 +54,11 @@ const primaryTariff =
 const provisionalTariff = primaryTariff ? undefined : getProvisionalTariff(province.id);
 const displayTariff = primaryTariff ?? provisionalTariff;
 const displayTariffs =
-  provinceWideTariffs.length > 0 ? provinceWideTariffs : provisionalTariff ? [provisionalTariff] : [];
+  provinceWideTariffs.length > 0
+    ? provinceWideTariffs
+    : provisionalTariff
+      ? [provisionalTariff]
+      : [];
 const hasAnyDisplayableTariff = hasAnyVerifiedTariff || !!provisionalTariff;
 
 const sameRegionProvinces = getAllProvincesWithStats()
@@ -98,9 +102,9 @@ const structuredData = [
     <div class="mt-4">
       {
         primaryTariff ? (
-          <TariffSummary provinceName={province.name} tariff={primaryTariff} />
+          <TariffSummary locationName={province.name} tariff={primaryTariff} />
         ) : provisionalTariff ? (
-          <EstimatedTariffSummary provinceName={province.name} tariff={provisionalTariff} />
+          <EstimatedTariffSummary locationName={province.name} tariff={provisionalTariff} />
         ) : (
           <UnverifiedNotice message={`${province.name} için güncel tarife henüz doğrulanmadı.`} />
         )
