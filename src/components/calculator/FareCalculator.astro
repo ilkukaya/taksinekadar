@@ -11,8 +11,13 @@ const { preselectedProvinceId } = Astro.props;
 
 const provinces = [...getActiveProvinces()].sort((a, b) => a.name.localeCompare(b.name, "tr"));
 
-// Only province-wide (non-district-scoped) active tariffs feed the generic calculator.
-const activeTariffs = getCurrentTariffs().filter((t) => t.status === "active" && !t.districtId);
+// Only province-wide (non-district-scoped) tariffs feed the generic calculator. Verified
+// ("active") tariffs always win; a lower-confidence, calculator-derived estimate
+// ("unverified" status — see getProvisionalTariff) only fills in for a province that has no
+// verified tariff at all, and is flagged via isEstimate so the result panel can say so.
+const currentTariffs = getCurrentTariffs().filter((t) => !t.districtId);
+const activeTariffs = currentTariffs.filter((t) => t.status === "active");
+const provisionalTariffs = currentTariffs.filter((t) => t.status === "unverified");
 
 type TariffFields = {
   openingFee: number;
@@ -22,11 +27,15 @@ type TariffFields = {
   validFrom: string;
   lastVerifiedAt: string;
   sourceName: string;
+  isEstimate: boolean;
 };
 
 const tariffLookup: Record<string, Record<string, TariffFields>> = {};
-for (const t of activeTariffs) {
+for (const t of [...activeTariffs, ...provisionalTariffs]) {
   tariffLookup[t.provinceId] ??= {};
+  // activeTariffs is spread first, so a real verified tariff is never overwritten by an estimate.
+  if (tariffLookup[t.provinceId][t.vehicleType]) continue;
+  const isEstimate = t.status === "unverified";
   tariffLookup[t.provinceId][t.vehicleType] = {
     openingFee: t.openingFee,
     pricePerKm: t.pricePerKm,
@@ -34,11 +43,15 @@ for (const t of activeTariffs) {
     waitingFeePerMinute: t.waitingFeePerMinute ?? 0,
     validFrom: t.validFrom,
     lastVerifiedAt: t.lastVerifiedAt,
-    sourceName: t.sourceName,
+    // Never ships the internal sourceName for an estimate — the client only reads it for
+    // verified tariffs (see the footerNote branch below), and this JSON blob is embedded in
+    // every page's source regardless of which province the page itself is about.
+    sourceName: isEstimate ? "" : t.sourceName,
+    isEstimate,
   };
 }
 
-const verifiedProvinceIds = new Set(Object.keys(tariffLookup));
+const availableProvinceIds = new Set(Object.keys(tariffLookup));
 ---
 
 <div class="card" data-fare-calculator>
@@ -57,10 +70,9 @@ const verifiedProvinceIds = new Set(Object.keys(tariffLookup));
               <option
                 value={p.id}
                 selected={p.id === preselectedProvinceId}
-                disabled={!verifiedProvinceIds.has(p.id)}
+                disabled={!availableProvinceIds.has(p.id)}
               >
                 {p.name}
-                {!verifiedProvinceIds.has(p.id) ? " (tarife doğrulanmadı)" : ""}
               </option>
             ))
           }
@@ -153,6 +165,7 @@ const verifiedProvinceIds = new Set(Object.keys(tariffLookup));
     validFrom: string;
     lastVerifiedAt: string;
     sourceName: string;
+    isEstimate: boolean;
   };
 
   function escapeHtml(value: string): string {
@@ -220,6 +233,10 @@ const verifiedProvinceIds = new Set(Object.keys(tariffLookup));
         { distanceKm, waitingMinutes, extraTollFee },
       );
 
+      const footerNote = tariffFields.isEstimate
+        ? "Bu il için genel bir hesaplayıcı ortalamasına dayanan tahmini bir tarife kullanılmıştır; resmî bir belediye/UKOME kararıyla ayrıca doğrulanmamıştır."
+        : `Tarife ${formatDateTR(result.validFrom)} tarihinde yürürlüğe girmiştir. Kaynak: ${escapeHtml(result.sourceName)}.`;
+
       resultEl.innerHTML = `
         <p class="text-sm text-ink-500">Tahmini toplam ücret</p>
         <p class="text-3xl font-bold text-ink-900">${formatCurrencyTRY(result.estimatedTotal)}</p>
@@ -230,9 +247,7 @@ const verifiedProvinceIds = new Set(Object.keys(tariffLookup));
           <dt>Ek geçiş</dt><dd>${formatCurrencyTRY(result.extraTollFee)}</dd>
           <dt>Minimum ücret uygulandı mı?</dt><dd>${result.minimumFareApplied ? "Evet" : "Hayır"}</dd>
         </dl>
-        <p class="mt-4 text-xs text-ink-400">
-          Tarife ${formatDateTR(result.validFrom)} tarihinde yürürlüğe girmiştir. Kaynak: ${escapeHtml(result.sourceName)}.
-        </p>
+        <p class="mt-4 text-xs text-ink-400">${footerNote}</p>
       `;
       resultEl.classList.remove("hidden");
       messageEl.classList.add("hidden");

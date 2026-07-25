@@ -10,7 +10,7 @@ import { canonicalUrl } from "../../config/site";
 import { getActiveAirports } from "../../lib/repositories/airports";
 import { getProvinceById } from "../../lib/repositories/provinces";
 import { getDistrictById } from "../../lib/repositories/districts";
-import { getActiveTariff } from "../../lib/repositories/tariffs";
+import { getActiveTariff, getProvisionalTariff } from "../../lib/repositories/tariffs";
 import { locativeOf } from "../../lib/language/turkish-suffix";
 import type { Airport } from "../../lib/validation/schemas";
 
@@ -25,6 +25,7 @@ const { airport } = Astro.props as { airport: Airport };
 const province = getProvinceById(airport.provinceId);
 const district = getDistrictById(airport.districtId);
 const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
+const hasUsableTariff = tariff !== undefined || (province && getProvisionalTariff(province.id) !== undefined);
 
 const path = `/havalimani/${airport.slug}/`;
 const title = withBrandSuffix(`${airport.name} Taksi Ücreti`);
@@ -60,7 +61,7 @@ const structuredData = [
     </p>
 
     {
-      tariff ? (
+      hasUsableTariff ? (
         <p class="text-ink-700 mt-4">
           {locativeOf(province?.name ?? "")} güncel taksi tarifesiyle bu havalimanından yapılacak
           yolculuğun tahmini ücretini aşağıdaki hesaplama aracıyla öğrenebilirsiniz.

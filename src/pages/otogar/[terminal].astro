@@ -10,7 +10,7 @@ import { canonicalUrl } from "../../config/site";
 import { getActiveBusTerminals } from "../../lib/repositories/bus-terminals";
 import { getProvinceById } from "../../lib/repositories/provinces";
 import { getDistrictById } from "../../lib/repositories/districts";
-import { getActiveTariff } from "../../lib/repositories/tariffs";
+import { getActiveTariff, getProvisionalTariff } from "../../lib/repositories/tariffs";
 import { locativeOf } from "../../lib/language/turkish-suffix";
 import type { BusTerminal } from "../../lib/validation/schemas";
 
@@ -25,6 +25,7 @@ const { terminal } = Astro.props as { terminal: BusTerminal };
 const province = getProvinceById(terminal.provinceId);
 const district = getDistrictById(terminal.districtId);
 const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
+const hasUsableTariff = tariff !== undefined || (province && getProvisionalTariff(province.id) !== undefined);
 
 const path = `/otogar/${terminal.slug}/`;
 const title = withBrandSuffix(`${terminal.name} Taksi Ücreti`);
@@ -59,7 +60,7 @@ const structuredData = [
     </p>
 
     {
-      tariff ? (
+      hasUsableTariff ? (
         <p class="text-ink-700 mt-4">
           {locativeOf(province?.name ?? "")} güncel taksi tarifesiyle bu otogardan yapılacak
           yolculuğun tahmini ücretini aşağıdaki hesaplama aracıyla öğrenebilirsiniz.

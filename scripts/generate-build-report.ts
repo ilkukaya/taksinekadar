@@ -49,6 +49,9 @@ function main() {
   const totals = getSiteWideTotals();
   const tariffs = getCurrentTariffs();
   const stands = getAllTaxiStands();
+  const provincesWithAnyTariff = new Set(
+    tariffs.filter((t) => t.status === "active" || t.status === "unverified").map((t) => t.provinceId),
+  );
 
   let sitemapFileCount = 0;
   const sitemapsDir = join(DIST_DIR, "sitemaps");
@@ -64,7 +67,8 @@ function main() {
 - İlçe sayısı: ${totals.districtCount}
 - Aktif durak: ${stands.length}
 - Kaynağı doğrulanmış tarife sayısı: ${tariffs.filter((t) => t.status === "active").length}
-- Doğrulanmamış/eksik tarife: ${totals.provinceCount - totals.verifiedTariffProvinceCount} il
+- Kaynağı doğrulanmamış (tahmini/hesaplayıcı) tarife sayısı: ${tariffs.filter((t) => t.status === "unverified").length}
+- Hiçbir tarifesi olmayan il: ${totals.provinceCount - provincesWithAnyTariff.size} il
 - Toplam HTML sayfa sayısı: ${htmlFiles.length}
 - Sitemap dosya sayısı: ${sitemapFileCount}
 - Tekrarlanan title sayısı: ${duplicateTitles.length}

@@ -9,7 +9,7 @@ import { buildPageMeta, withBrandSuffix } from "../../lib/seo/meta";
 import { canonicalUrl } from "../../config/site";
 import { getActivePopularRoutes } from "../../lib/repositories/popular-routes";
 import { getProvinceById } from "../../lib/repositories/provinces";
-import { getActiveTariff } from "../../lib/repositories/tariffs";
+import { getActiveTariff, getProvisionalTariff } from "../../lib/repositories/tariffs";
 import { calculateFare } from "../../lib/calculation/fare-calculator";
 import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
 import type { PopularRoute } from "../../lib/validation/schemas";
@@ -33,7 +33,9 @@ export function getStaticPaths() {
 const { route } = Astro.props as { route: PopularRoute };
 const province = getProvinceById(route.provinceId);
 const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
-const fare = tariff ? calculateFare(tariff, { distanceKm: route.distanceKm }) : undefined;
+const provisionalTariff = province && !tariff ? getProvisionalTariff(province.id) : undefined;
+const displayTariff = tariff ?? provisionalTariff;
+const fare = displayTariff ? calculateFare(displayTariff, { distanceKm: route.distanceKm }) : undefined;
 
 const path = `/rota/${route.slug}/`;
 const title = withBrandSuffix(`${route.originName} - ${route.destinationName} Taksi Ücreti`);
@@ -89,8 +91,12 @@ const structuredData = [
           <p class="text-ink-500 mt-2 text-xs">
             Açılış ücreti {formatCurrencyTRY(fare.openingFee)} + {route.distanceKm} km ×{" "}
             {formatCurrencyTRY(fare.pricePerKm)} üzerinden hesaplanmıştır; bekleme süresi ve
-            köprü/otoyol geçiş ücreti bu tutara dahil değildir. Tarife{" "}
-            {formatDateTR(fare.validFrom)} tarihinden itibaren geçerlidir.
+            köprü/otoyol geçiş ücreti bu tutara dahil değildir.{" "}
+            {provisionalTariff ? (
+              "Bu il için genel bir hesaplayıcı ortalamasına dayanan tahmini bir tarife kullanılmıştır; resmî bir belediye/UKOME kararıyla ayrıca doğrulanmamıştır."
+            ) : (
+              <>Tarife {formatDateTR(fare.validFrom)} tarihinden itibaren geçerlidir.</>
+            )}
           </p>
         </div>
       ) : (

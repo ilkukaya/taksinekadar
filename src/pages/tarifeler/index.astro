@@ -55,11 +55,11 @@ const meta = buildPageMeta({
       unverified.length > 0 && (
         <>
           <h2 class="text-ink-900 mt-12 text-xl font-bold">
-            Doğrulama Bekleyen İller ({unverified.length})
+            Tahmini Tarifeli İller ({unverified.length})
           </h2>
           <p class="text-ink-500 mt-2 text-sm">
-            Bu illerde güncel tarife için henüz güvenilir bir kaynak doğrulayamadık; sayfaları
-            ziyaret edildiğinde bu açıkça belirtilir.
+            Bu illerde tarifeyi henüz resmî bir belediye/UKOME kararıyla doğrulayamadık; sayfalarında
+            genel bir hesaplayıcı ortalamasına dayanan tahmini rakamlar gösterilir.
           </p>
           <ul class="text-ink-500 mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
             {unverified.map((p) => (

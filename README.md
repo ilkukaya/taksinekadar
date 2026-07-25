@@ -35,6 +35,7 @@ Bu ilk teslimat **Faz 1 ve ötesinde bazı Faz 3 unsurlarını** kapsar:
 | 81 il hub + il tarife sayfaları               | ✅ Tamamlandı                                                    |
 | 973 ilçe referans verisi                      | ✅ Tamamlandı (yalnızca veri; ilçe sayfaları henüz yok)          |
 | Doğrulanmış il tarifeleri                     | ✅ 41 il + Alanya/Gazipaşa/Cide ilçe tarifesi — aşağıya bakın    |
+| Tahmini il tarifeleri (kalan 40 il)           | ✅ Tamamlandı — açıkça ayrı işaretli, bkz. bölüm 2.4             |
 | Havalimanı ve otogar sayfaları                | ✅ Tamamlandı (plan Faz 3'tü, veri hazır olduğu için öne alındı) |
 | Rehber (SSS) içerikleri                       | ✅ 7 makale                                                      |
 | Popüler rotalar                               | ⚠️ Kısmi — 3 doğrulanmış güzergâh yayında, aşağıya bakın         |
@@ -83,11 +84,31 @@ jenerik "taksi hesaplama" sitesine güvenilmemiştir. Güven puanları (`confide
 doğrulama derinliğini yansıtır; bazı illerde yürürlük tarihi yalnızca ay düzeyinde bilinmektedir
 (bu satırlarda ayın 15'i varsayılan olarak işaretlenmiş ve `sourceDocument` alanında açıkça
 belirtilmiştir — rakamların kendisi doğrulanmıştır, yalnızca kesin gün belirsizdir). 81 ilin geri
-kalan 40'ı için henüz doğrulanmış bir tarife yoktur ve bu iller sitede **rakam göstermez** —
-"tarife henüz doğrulanmadı" ibaresiyle sunulur ve ilgili tarife sayfası `noindex` işaretlenir.
+kalan 40'ı için henüz bu şekilde resmî kaynaklı bir tarife yoktur — bkz. §2.4 için bu illerde
+şu an ne gösterildiği.
 
 Tüm tarife kaynakları, yürürlük tarihleri ve güven puanları `data/source/tariffs.csv` ve
 `data/source/tariff-history.csv` dosyalarında satır satır görülebilir.
+
+### 2.4 Doğrulanmamış iller için tahmini tarife
+
+Kalan 40 il artık boş/uyarı sayfası göstermez: her birinin il sayfasında ve hesaplama aracında
+gerçek bir rakam görünür, ancak bu rakam açıkça ve tutarlı biçimde "tahmini" olarak işaretlenir
+(`status: unverified`, `confidenceScore: 30`) — doğrulanmış 46 tarifeden (`status: active`)
+her yerde ayrı tutulur: `getActiveTariff`/`hasVerifiedTariff` bu kayıtları hiçbir zaman
+"doğrulanmış" saymaz, il sayfasında farklı bir bileşen (`EstimatedTariffSummary`, kaynak
+bağlantısı olmadan) kullanılır, ve hesaplama sonucunun altında "resmî bir belediye/UKOME
+kararıyla ayrıca doğrulanmamıştır" notu yer alır. Bu rakamlar, kullanıcının sağladığı ve tüm 81
+il için genel bir hesaplayıcı sitesinden derlenmiş bir tarife paketinden alınmıştır; kaynağın adı
+kullanıcı isteği üzerine sitede hiçbir yerde gösterilmez (yalnızca `tariffs.csv`'nin
+`sourceDocument` alanında dahili bir not olarak durur, `sourceName`/`sourceUrl` boş bırakılmıştır).
+
+Bu paket doğrudan güvenilmedi: zaten doğrulanmış 41 ille çapraz kontrol edildiğinde 28 ilde
+birebir örtüştüğü, ama İstanbul, Balıkesir ve Artvin gibi yakın zamanda zam almış illerde
+belirgin şekilde bayat (zam öncesi) rakamlar taşıdığı, Erzurum ve Niğde gibi bazı illerde ise
+büyük ve açıklanamayan farklar olduğu tespit edildi — bu yüzden paket yalnızca hiçbir doğrulanmış
+tarifesi olmayan 40 il için, sitede olduğu gibi "doğrulanmadı" değil açıkça "tahmini" olarak
+kullanıldı; zaten doğrulanmış 41 ilin verisine dokunulmadı.
 
 ### 2.1 Taksi durağı / POI veri kaynağı erişilebilirliği
 
@@ -345,6 +366,7 @@ pnpm check       # astro check (TypeScript + Astro şablon denetimi)
 ## 10. Yayın Öncesi Kontrol Listesi
 
 Bkz. proje talimatının 41. bölümü. Bu teslimatta henüz karşılanmayan maddeler: hastane/AVM
-kümeleri, kalan 5 popüler rota (bkz. 2.2), kalan 40 ilin tarife doğrulaması (bkz. bölüm 2),
-4 ilin durak verisi (Bayburt, Bartın, Iğdır, Kilis — bkz. 2.3), Lighthouse ölçümü (gerçek bir
-deploy sonrası yapılmalı). Sabit hat alan kodları ve taksi durağı verisi/sayfaları tamamlandı.
+kümeleri, kalan 5 popüler rota (bkz. 2.2), kalan 40 ilin **resmî kaynaklı** tarife doğrulaması
+(şu an tahmini bir rakamla kapatılmış durumdalar — bkz. bölüm 2.4), 4 ilin durak verisi (Bayburt,
+Bartın, Iğdır, Kilis — bkz. 2.3), Lighthouse ölçümü (gerçek bir deploy sonrası yapılmalı). Sabit
+hat alan kodları, taksi durağı verisi/sayfaları ve il/ilçe merkez koordinatları tamamlandı.

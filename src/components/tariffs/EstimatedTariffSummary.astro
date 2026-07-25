@@ -1,0 +1,25 @@
+---
+import type { Tariff } from "../../lib/validation/schemas";
+import { formatCurrencyTRY } from "../../lib/utils/format";
+import { locativeOf } from "../../lib/language/turkish-suffix";
+import { VEHICLE_TYPE_LABELS } from "../../config/vehicle-types";
+
+interface Props {
+  provinceName: string;
+  tariff: Tariff;
+}
+
+const { provinceName, tariff } = Astro.props;
+const vehicleLabel = VEHICLE_TYPE_LABELS[tariff.vehicleType].toLocaleLowerCase("tr-TR");
+---
+
+<p class="text-ink-800 text-lg leading-relaxed">
+  {locativeOf(provinceName)} tahmini {vehicleLabel} açılış ücreti{" "}
+  <strong>{formatCurrencyTRY(tariff.openingFee)}</strong>, kilometre ücreti{" "}
+  <strong>{formatCurrencyTRY(tariff.pricePerKm)}</strong> ve minimum/indi-bindi ücreti{" "}
+  <strong>{formatCurrencyTRY(tariff.minimumFare)}</strong> civarındadır.
+</p>
+<p class="text-ink-400 mt-2 text-xs">
+  Bu rakamlar genel bir hesaplayıcı ortalamasına dayanan tahmindir; resmî bir belediye/UKOME
+  kararıyla ayrıca doğrulanmamıştır.
+</p>
