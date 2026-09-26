@@ -1,33 +1,92 @@
 ---
 import { SITE } from "../../config/site";
 
-const FOOTER_LINKS = [
-  { href: "/yasal/veri-kaynaklari/", label: "Veri Kaynakları" },
-  { href: "/yasal/gizlilik-politikasi/", label: "Gizlilik Politikası" },
-  { href: "/yasal/kullanim-sartlari/", label: "Kullanım Şartları" },
+const POPULAR_CITIES = [
+  { href: "/istanbul-taksi-ucreti/", label: "İstanbul taksi ücreti" },
+  { href: "/ankara-taksi-ucreti/", label: "Ankara taksi ücreti" },
+  { href: "/izmir-taksi-ucreti/", label: "İzmir taksi ücreti" },
+  { href: "/antalya-taksi-ucreti/", label: "Antalya taksi ücreti" },
+  { href: "/bursa-taksi-ucreti/", label: "Bursa taksi ücreti" },
+  { href: "/adana-taksi-ucreti/", label: "Adana taksi ücreti" },
+];
+
+const TOOLS = [
+  { href: "/taksi-ucreti-hesaplama/", label: "Taksi ücreti hesaplama" },
+  { href: "/tarifeler/", label: "Tüm il tarifeleri" },
+  { href: "/taksi-duraklari/", label: "Taksi durakları" },
+  { href: "/havalimani/", label: "Havalimanı taksi ücretleri" },
+  { href: "/otogar/", label: "Otogar taksi ücretleri" },
+  { href: "/rota/", label: "Popüler rotalar" },
+];
+
+const GUIDES = [
+  { href: "/rehber/taksi-ucreti-nasil-hesaplanir/", label: "Taksi ücreti nasıl hesaplanır?" },
+  { href: "/rehber/taksi-indi-bindi-ucreti-nedir/", label: "İndi-bindi ücreti nedir?" },
+  { href: "/rehber/gece-tarifesi-var-mi/", label: "Gece tarifesi var mı?" },
+  { href: "/rehber/taksi-sikayeti-nereye-yapilir/", label: "Taksi şikâyeti nereye yapılır?" },
+  { href: "/rehber/", label: "Tüm rehber yazıları" },
+];
+
+const LEGAL = [
+  { href: "/yasal/hakkimizda/", label: "Hakkımızda" },
+  { href: "/yasal/veri-kaynaklari/", label: "Veri kaynakları" },
+  { href: "/yasal/gizlilik-politikasi/", label: "Gizlilik politikası" },
+  { href: "/yasal/kullanim-sartlari/", label: "Kullanım şartları" },
   { href: "/yasal/iletisim/", label: "İletişim" },
+];
+
+const columns = [
+  { title: "Popüler şehirler", links: POPULAR_CITIES },
+  { title: "Araçlar", links: TOOLS },
+  { title: "Rehber", links: GUIDES },
+  { title: "Kurumsal", links: LEGAL },
 ];
 
 const currentYear = new Date().getFullYear();
 ---
 
-<footer class="border-ink-100 mt-16 border-t bg-white">
-  <div class="text-ink-600 mx-auto max-w-6xl px-4 py-10 text-sm">
-    <p class="text-ink-900 font-semibold">{SITE.name}</p>
-    <p class="mt-1 max-w-xl">{SITE.description}</p>
-    <nav class="mt-6 flex flex-wrap gap-x-6 gap-y-2" aria-label="Alt menü">
+<footer class="bg-ink-950 text-ink-300 mt-20">
+  <div class="checker-squares" aria-hidden="true"></div>
+  <div class="mx-auto max-w-6xl px-4 pt-14 pb-28 md:pb-12">
+    <div class="grid gap-10 lg:grid-cols-[1.3fr_repeat(4,1fr)]">
+      <div>
+        <a href="/" class="flex items-center gap-2.5 text-lg font-extrabold text-white">
+          <img src="/logo.svg" alt="" width="36" height="36" class="rounded-[9px]" />
+          {SITE.name}
+        </a>
+        <p class="mt-4 max-w-xs text-sm leading-relaxed">
+          {`${SITE.tagline} ${SITE.slogan}`}
+        </p>
+        <a href="/taksi-ucreti-hesaplama/" class="btn-primary mt-6 px-4 py-2.5 text-sm">
+          Ücreti hesapla
+        </a>
+      </div>
       {
-        FOOTER_LINKS.map((link) => (
-          <a href={link.href} class="hover:text-ink-900 hover:underline">
-            {link.label}
-          </a>
+        columns.map((col) => (
+          <nav aria-label={col.title}>
+            <p class="text-xs font-bold tracking-[0.14em] text-white uppercase">{col.title}</p>
+            <ul class="mt-4 space-y-2.5 text-sm">
+              {col.links.map((link) => (
+                <li>
+                  <a href={link.href} class="hover:text-taxi-300 transition-colors">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
         ))
       }
-    </nav>
-    <p class="text-ink-400 mt-6 text-xs">
-      © {currentYear}
-      {SITE.name}. Fiyatlar tahminidir; gerçek taksimetre tutarı trafik, bekleme ve güzergâha göre
-      değişebilir.
-    </p>
+    </div>
+
+    <div
+      class="text-ink-400 mt-12 flex flex-col gap-3 border-t border-white/10 pt-6 text-xs sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>© {currentYear} {SITE.name} · {SITE.domain}</p>
+      <p class="max-w-xl sm:text-right">
+        Fiyatlar tahminidir; gerçek taksimetre tutarı trafik, bekleme ve güzergâha göre değişebilir.
+        Site taksi çağırma veya ödeme hizmeti sunmaz.
+      </p>
+    </div>
   </div>
 </footer>

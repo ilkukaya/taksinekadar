@@ -9,6 +9,11 @@ Tamamen statik (Astro/SSG), üyeliksiz, canlı API'siz bir bilgi ve hesaplama pl
 Bu doküman, `639068f6-taksinekadarbirlesikmasterprompt.md` adlı proje talimatına göre kurulmuş
 projenin mevcut durumunu, mimarisini ve veri güncelleme akışını açıklar.
 
+> **Yayın, SEO ve gelir kurulumu (alan adı, Search Console, AdSense, affiliate):**
+> [docs/YAYIN-VE-GELIR-REHBERI.md](docs/YAYIN-VE-GELIR-REHBERI.md) — teknik bilgi gerektirmeyen,
+> adım adım rehber. Tüm entegrasyonlar `PUBLIC_*` ortam değişkenleriyle açılır
+> (`src/config/monetization.ts`, `.env.example`).
+
 ---
 
 ## 0. Hızlı Başlangıç
@@ -241,9 +246,13 @@ yapılmasını ve bunun burada belirtilmesini istiyor. Yapılan varsayımlar:
    doğrulanmamıştır (özellikle uzun/düzensiz kıyı şeridi olan ilçelerde ikisi belirgin şekilde
    farklı olabilir). Site şu an bu alanları haritada göstermek için kullanmıyor; yalnızca
    `scripts/validate-geography.ts`'teki nokta-içinde-poligon doğrulaması bu alanlara dayanıyor.
-6. **AdSense yayıncı kimliği (`PUBLIC_ADSENSE_PUB_ID`) yapılandırılmadı.** Reklam bileşenleri
-   tamamen hazır ve CLS yaratmayacak şekilde yer ayırıyor, ancak env değişkeni tanımlanana kadar
-   hiçbir reklam scripti veya sahte yayıncı kimliği yüklenmez.
+6. **AdSense yayıncı kimliği (`PUBLIC_ADSENSE_PUB_ID`) yapılandırılmadı.** Yayıncı kimliği tek
+   başına AdSense Otomatik Reklamlar'ı ve `ads.txt`'yi açar; elle yerleştirilen reklam alanları
+   ayrıca her yerleşimin sayısal slot kimliğini ister (`PUBLIC_ADSENSE_SLOT_*`). Tanımlanmayan
+   hiçbir reklam/affiliate/analitik öğesi sayfada görünmez veya üçüncü taraf isteği yapmaz.
+7. **Canonical origin ortamdan gelir.** `SITE_URL` → Netlify `URL` (birincil adres) →
+   `https://taksinekadar.com` sırasıyla. Özel alan adı Netlify'da birincil yapıldığında canonical,
+   sitemap ve Open Graph adresleri bir sonraki build'de kendiliğinden ona geçer.
 
 ---
 

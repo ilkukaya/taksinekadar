@@ -13,6 +13,8 @@ import { getDistrictById } from "../../lib/repositories/districts";
 import { getActiveTariff, getProvisionalTariff } from "../../lib/repositories/tariffs";
 import { locativeOf } from "../../lib/language/turkish-suffix";
 import type { BusTerminal } from "../../lib/validation/schemas";
+import TariffStats from "../../components/tariffs/TariffStats.astro";
+import PartnerOffers from "../../components/monetization/PartnerOffers.astro";
 
 export function getStaticPaths() {
   return getActiveBusTerminals().map((terminal) => ({
@@ -25,7 +27,9 @@ const { terminal } = Astro.props as { terminal: BusTerminal };
 const province = getProvinceById(terminal.provinceId);
 const district = getDistrictById(terminal.districtId);
 const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
-const hasUsableTariff = tariff !== undefined || (province && getProvisionalTariff(province.id) !== undefined);
+const displayTariff = tariff ?? (province ? getProvisionalTariff(province.id) : undefined);
+const hasUsableTariff =
+  tariff !== undefined || (province && getProvisionalTariff(province.id) !== undefined);
 
 const path = `/otogar/${terminal.slug}/`;
 const title = withBrandSuffix(`${terminal.name} Taksi Ücreti`);
@@ -54,7 +58,7 @@ const structuredData = [
   />
 
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">{terminal.name} Taksi Ücreti</h1>
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">{terminal.name} Taksi Ücreti</h1>
     <p class="text-ink-600 mt-3 text-lg">
       {terminal.name}, {province?.name} iline bağlı {district?.name} ilçesinde yer alır.
     </p>
@@ -75,9 +79,21 @@ const structuredData = [
     }
 
     <div class="mt-8">
-      <FareCalculator preselectedProvinceId={province?.id} />
+      {
+        displayTariff && (
+          <div class="mb-8">
+            <TariffStats tariff={displayTariff} isEstimate={!tariff} />
+          </div>
+        )
+      }
+      <FareCalculator
+        preselectedProvinceId={province?.id}
+        heading={`${terminal.name} taksi ücreti hesapla`}
+      />
     </div>
   </section>
+
+  <PartnerOffers kinds={["busTicket", "hotel", "carRental"]} place={province?.name} />
 
   <AdSlotAfterCalculator />
 

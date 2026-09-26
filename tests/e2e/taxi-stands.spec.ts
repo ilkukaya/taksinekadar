@@ -6,7 +6,7 @@ test("district taxi-stand page lists real stands with a working map link", async
   await expect(page.locator("h1")).toContainText("Ceyhan");
   await expect(page.locator("h1")).toContainText("Adana");
 
-  const firstStand = page.locator("[id]").first();
+  const firstStand = page.locator("main li[id]").first();
   await expect(firstStand).toBeVisible();
   await expect(page.getByRole("link", { name: "Haritada ara →" }).first()).toBeVisible();
 });
@@ -34,7 +34,7 @@ test("top-level taxi-duraklari index links to a province page", async ({ page })
 
 test("individual stand page has its own URL with a working tel: link", async ({ page }) => {
   await page.goto("/adana/ceyhan/taksi-duraklari/");
-  await page.getByRole("link", { name: "Ceyhan Ada Taksi" }).click();
+  await page.getByRole("link", { name: "Ceyhan Ada Taksi", exact: true }).click();
 
   await expect(page).toHaveURL(/\/adana\/ceyhan\/ceyhan-ada-taksi-duragi\/$/);
   await expect(page.locator("h1")).toHaveText("Ceyhan Ada Taksi");

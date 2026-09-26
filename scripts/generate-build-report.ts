@@ -50,7 +50,9 @@ function main() {
   const tariffs = getCurrentTariffs();
   const stands = getAllTaxiStands();
   const provincesWithAnyTariff = new Set(
-    tariffs.filter((t) => t.status === "active" || t.status === "unverified").map((t) => t.provinceId),
+    tariffs
+      .filter((t) => t.status === "active" || t.status === "unverified")
+      .map((t) => t.provinceId),
   );
 
   let sitemapFileCount = 0;

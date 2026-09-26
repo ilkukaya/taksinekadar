@@ -1,26 +1,59 @@
 ---
+/**
+ * Client-side site search over /search-index.json (provinces, districts with stands,
+ * airports, bus terminals). Safe to render several times on one page (hero + header
+ * dialog): every instance is wired up by data attributes, never by a shared id.
+ */
 interface Props {
   placeholder?: string;
+  size?: "md" | "lg";
+  autofocus?: boolean;
 }
 
-const { placeholder = "İl, ilçe, durak veya havalimanı ara..." } = Astro.props;
+const {
+  placeholder = "İl, ilçe, havalimanı veya otogar ara…",
+  size = "md",
+  autofocus = false,
+} = Astro.props;
+const uid = `search-${Math.random().toString(36).slice(2, 8)}`;
 ---
 
 <div class="relative" data-search-root>
-  <label for="site-search-input" class="sr-only">Site içinde ara</label>
-  <input
-    id="site-search-input"
-    type="search"
-    autocomplete="off"
-    placeholder={placeholder}
-    class="border-ink-200 w-full rounded-lg border px-4 py-2.5 text-sm"
-    aria-expanded="false"
-    aria-controls="site-search-results"
-  />
+  <label for={uid} class="sr-only">Site içinde ara</label>
+  <div class="relative">
+    <svg
+      class="text-ink-400 pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+      stroke-linecap="round"
+      aria-hidden="true"
+      ><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg
+    >
+    <input
+      id={uid}
+      type="search"
+      autocomplete="off"
+      enterkeyhint="search"
+      autofocus={autofocus}
+      placeholder={placeholder}
+      class:list={[
+        "field pl-12",
+        size === "lg" ? "py-4 text-lg shadow-[var(--shadow-card)]" : "py-3",
+      ]}
+      role="combobox"
+      aria-autocomplete="list"
+      aria-expanded="false"
+      aria-controls={`${uid}-results`}
+      data-search-input
+    />
+  </div>
   <ul
-    id="site-search-results"
-    class="border-ink-100 absolute z-20 mt-1 hidden w-full rounded-lg border bg-white shadow-lg"
+    id={`${uid}-results`}
+    class="border-ink-100 absolute z-40 mt-2 hidden max-h-[60vh] w-full overflow-y-auto rounded-2xl border bg-white p-1.5 shadow-[var(--shadow-lift)]"
     role="listbox"
+    data-search-results
   >
   </ul>
 </div>
@@ -28,15 +61,32 @@ const { placeholder = "İl, ilçe, durak veya havalimanı ara..." } = Astro.prop
 <script>
   type SearchIndexItem = {
     name: string;
-    type: string;
+    type: "il" | "ilce" | "havalimani" | "otogar";
     path: string;
     province?: string;
   };
 
-  let index: SearchIndexItem[] | null = null;
+  const TYPE_LABELS: Record<SearchIndexItem["type"], string> = {
+    il: "İl tarifesi",
+    ilce: "Taksi durakları",
+    havalimani: "Havalimanı",
+    otogar: "Otogar",
+  };
+  const TYPE_RANK: Record<SearchIndexItem["type"], number> = {
+    il: 0,
+    havalimani: 1,
+    otogar: 2,
+    ilce: 3,
+  };
 
-  const input = document.getElementById("site-search-input") as HTMLInputElement | null;
-  const resultsEl = document.getElementById("site-search-results") as HTMLUListElement | null;
+  let indexPromise: Promise<SearchIndexItem[]> | null = null;
+
+  function loadIndex(): Promise<SearchIndexItem[]> {
+    indexPromise ??= fetch("/search-index.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => []);
+    return indexPromise;
+  }
 
   function escapeHtml(value: string): string {
     return value
@@ -54,69 +104,110 @@ const { placeholder = "İl, ilçe, durak veya havalimanı ara..." } = Astro.prop
       .replace(/ü/g, "u")
       .replace(/ş/g, "s")
       .replace(/ö/g, "o")
-      .replace(/ç/g, "c");
+      .replace(/ç/g, "c")
+      .replace(/â/g, "a")
+      .replace(/î/g, "i")
+      .replace(/û/g, "u");
   }
 
-  async function ensureIndex(): Promise<SearchIndexItem[]> {
-    if (index) return index;
-    const response = await fetch("/search-index.json");
-    index = response.ok ? await response.json() : [];
-    return index ?? [];
+  function search(data: SearchIndexItem[], query: string): SearchIndexItem[] {
+    const q = normalize(query);
+    return data
+      .map((item) => {
+        const name = normalize(item.name);
+        const province = item.province ? normalize(item.province) : "";
+        let score = -1;
+        if (name.startsWith(q)) score = 0;
+        else if (name.split(/\s+/).some((w) => w.startsWith(q))) score = 1;
+        else if (name.includes(q)) score = 2;
+        else if (province.startsWith(q)) score = 3;
+        return { item, score };
+      })
+      .filter((r) => r.score >= 0)
+      .sort(
+        (a, b) =>
+          a.score - b.score ||
+          TYPE_RANK[a.item.type] - TYPE_RANK[b.item.type] ||
+          a.item.name.localeCompare(b.item.name, "tr"),
+      )
+      .slice(0, 10)
+      .map((r) => r.item);
   }
 
-  function renderResults(items: SearchIndexItem[]) {
-    if (!resultsEl || !input) return;
+  document.querySelectorAll<HTMLElement>("[data-search-root]").forEach((root) => {
+    const input = root.querySelector<HTMLInputElement>("[data-search-input]");
+    const resultsEl = root.querySelector<HTMLUListElement>("[data-search-results]");
+    if (!input || !resultsEl) return;
+    let active = -1;
 
-    if (items.length === 0) {
-      resultsEl.innerHTML = `<li class="px-4 py-3 text-sm text-ink-500">Sonuç bulunamadı</li>`;
-      resultsEl.classList.remove("hidden");
-      input.setAttribute("aria-expanded", "true");
-      return;
+    function setActive(index: number) {
+      const options = resultsEl!.querySelectorAll<HTMLAnchorElement>("a[data-option]");
+      options.forEach((o, i) => o.setAttribute("aria-selected", String(i === index)));
+      active = index;
+      options[index]?.scrollIntoView({ block: "nearest" });
     }
 
-    resultsEl.innerHTML = items
-      .map(
-        (item) => `
-          <li role="option">
-            <a href="${escapeHtml(item.path)}" class="block px-4 py-2 text-sm text-ink-700 hover:bg-paper-dim">
-              ${escapeHtml(item.name)}
-              ${item.province ? `<span class="text-ink-400"> · ${escapeHtml(item.province)}</span>` : ""}
+    function hide() {
+      resultsEl!.classList.add("hidden");
+      resultsEl!.innerHTML = "";
+      input!.setAttribute("aria-expanded", "false");
+      active = -1;
+    }
+
+    function render(items: SearchIndexItem[]) {
+      resultsEl!.innerHTML =
+        items.length === 0
+          ? `<li class="px-4 py-3 text-sm text-ink-500">Sonuç bulunamadı. İl veya ilçe adını deneyin.</li>`
+          : items
+              .map(
+                (item) => `
+          <li role="presentation">
+            <a role="option" data-option aria-selected="false" href="${escapeHtml(item.path)}"
+               class="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 hover:bg-paper-dim aria-selected:bg-taxi-100">
+              <span class="min-w-0">
+                <span class="block truncate font-semibold text-ink-900">${escapeHtml(item.name)}</span>
+                ${item.province ? `<span class="block truncate text-xs text-ink-500">${escapeHtml(item.province)}</span>` : ""}
+              </span>
+              <span class="shrink-0 rounded-full bg-ink-50 px-2 py-0.5 text-[11px] font-semibold text-ink-600">${TYPE_LABELS[item.type]}</span>
             </a>
           </li>`,
-      )
-      .join("");
-    resultsEl.classList.remove("hidden");
-    input.setAttribute("aria-expanded", "true");
-  }
-
-  function hideResults() {
-    if (!resultsEl || !input) return;
-    resultsEl.classList.add("hidden");
-    resultsEl.innerHTML = "";
-    input.setAttribute("aria-expanded", "false");
-  }
-
-  input?.addEventListener("input", async () => {
-    const query = input.value.trim();
-    if (query.length < 2) {
-      hideResults();
-      return;
+              )
+              .join("");
+      resultsEl!.classList.remove("hidden");
+      input!.setAttribute("aria-expanded", "true");
+      active = -1;
     }
-    const data = await ensureIndex();
-    const normalizedQuery = normalize(query);
-    const matches = data
-      .filter((item) => normalize(item.name).includes(normalizedQuery))
-      .slice(0, 8);
-    renderResults(matches);
-  });
 
-  input?.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") hideResults();
-  });
+    input.addEventListener("focus", () => void loadIndex(), { once: true });
 
-  document.addEventListener("click", (event) => {
-    if (!(event.target instanceof Node)) return;
-    const root = document.querySelector("[data-search-root]");
-    if (root && !root.contains(event.target)) hideResults();
+    input.addEventListener("input", async () => {
+      const query = input.value.trim();
+      if (query.length < 2) return hide();
+      render(search(await loadIndex(), query));
+    });
+
+    input.addEventListener("keydown", (event) => {
+      const count = resultsEl.querySelectorAll("a[data-option]").length;
+      if (event.key === "Escape") return hide();
+      if (!count) return;
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setActive((active + 1) % count);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setActive((active - 1 + count) % count);
+      } else if (event.key === "Enter") {
+        const target =
+          resultsEl.querySelectorAll<HTMLAnchorElement>("a[data-option]")[active >= 0 ? active : 0];
+        if (target) {
+          event.preventDefault();
+          window.location.href = target.href;
+        }
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target instanceof Node && !root.contains(event.target)) hide();
+    });
   });
 </script>

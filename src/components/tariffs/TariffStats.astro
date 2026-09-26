@@ -1,0 +1,64 @@
+---
+/**
+ * At-a-glance tariff tiles (opening fee, per-km, minimum fare, 10 km estimate) with a clear
+ * verified / estimated badge. Used at the top of province, airport and bus-terminal pages.
+ */
+import type { Tariff } from "../../lib/validation/schemas";
+import { calculateFare } from "../../lib/calculation/fare-calculator";
+import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
+
+interface Props {
+  tariff: Tariff;
+  isEstimate?: boolean;
+}
+
+const { tariff, isEstimate = tariff.status !== "active" } = Astro.props;
+const tenKm = calculateFare(tariff, { distanceKm: 10 }).estimatedTotal;
+const tiles = [
+  { label: "Açılış ücreti", value: formatCurrencyTRY(tariff.openingFee) },
+  { label: "Kilometre ücreti", value: formatCurrencyTRY(tariff.pricePerKm) },
+  { label: "İndi-bindi (minimum)", value: formatCurrencyTRY(tariff.minimumFare) },
+];
+---
+
+<div>
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div class="meter col-span-2 p-5 sm:col-span-1">
+      <p class="text-ink-300 text-xs font-bold tracking-wider uppercase">10 km yolculuk</p>
+      <p class="meter-digits mt-2 text-3xl">{formatCurrencyTRY(tenKm)}</p>
+      <p class="text-ink-400 mt-1 text-xs">bekleme hariç, tahmini</p>
+    </div>
+    {
+      tiles.map((t) => (
+        <div class="border-ink-100 rounded-2xl border bg-white p-4 sm:p-5">
+          <p class="text-ink-500 text-xs font-bold tracking-wide uppercase">{t.label}</p>
+          <p class="text-ink-900 mt-2 text-2xl font-black tabular-nums">{t.value}</p>
+        </div>
+      ))
+    }
+  </div>
+  <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
+    {
+      isEstimate ? (
+        <span class="bg-taxi-100 text-taxi-900 rounded-full px-2.5 py-1 font-bold">
+          Tahmini tarife · resmî kararla doğrulanmadı
+        </span>
+      ) : (
+        <span class="bg-call-50 text-call-700 inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-bold">
+          <svg viewBox="0 0 20 20" class="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+            <path d="M8.6 13.4 5.2 10l-1.4 1.4 4.8 4.8 8-8-1.4-1.4z" />
+          </svg>
+          Doğrulanmış tarife
+        </span>
+      )
+    }
+    {
+      !isEstimate && (
+        <span class="text-ink-500">
+          Yürürlük: <strong class="text-ink-700">{formatDateTR(tariff.validFrom)}</strong> · Son
+          kontrol: {formatDateTR(tariff.lastVerifiedAt)}
+        </span>
+      )
+    }
+  </div>
+</div>

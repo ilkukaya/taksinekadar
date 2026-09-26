@@ -13,6 +13,12 @@ import { getDistrictById } from "../../lib/repositories/districts";
 import { getActiveTariff, getProvisionalTariff } from "../../lib/repositories/tariffs";
 import { locativeOf } from "../../lib/language/turkish-suffix";
 import type { Airport } from "../../lib/validation/schemas";
+import TariffStats from "../../components/tariffs/TariffStats.astro";
+import FaqSection from "../../components/common/FaqSection.astro";
+import PartnerOffers from "../../components/monetization/PartnerOffers.astro";
+import { getPopularRoutesByProvince } from "../../lib/repositories/popular-routes";
+import { getTaxiStandsByDistrict } from "../../lib/repositories/taxi-stands";
+import { formatCurrencyTRY } from "../../lib/utils/format";
 
 export function getStaticPaths() {
   return getActiveAirports().map((airport) => ({
@@ -25,13 +31,51 @@ const { airport } = Astro.props as { airport: Airport };
 const province = getProvinceById(airport.provinceId);
 const district = getDistrictById(airport.districtId);
 const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
-const hasUsableTariff = tariff !== undefined || (province && getProvisionalTariff(province.id) !== undefined);
+const hasUsableTariff =
+  tariff !== undefined || (province && getProvisionalTariff(province.id) !== undefined);
 
 const path = `/havalimani/${airport.slug}/`;
 const title = withBrandSuffix(`${airport.name} Taksi Ücreti`);
 const description = `${airport.name} ile ${province?.name ?? ""} arasında taksi ücreti bilgisi, il/ilçe konumu ve güncel tarife.`;
 
-const meta = buildPageMeta({ title, description, path });
+const meta = buildPageMeta({
+  title,
+  description,
+  path,
+  ...(province ? { ogImagePath: `/og/${province.slug}.jpg` } : {}),
+});
+
+const displayTariff = tariff ?? (province ? getProvisionalTariff(province.id) : undefined);
+const routes = province
+  ? getPopularRoutesByProvince(province.id).filter((r) => r.status === "active")
+  : [];
+const districtStandCount = district ? getTaxiStandsByDistrict(district.id).length : 0;
+const otherAirports = getActiveAirports().filter((a) => a.id !== airport.id);
+
+const faqEntries = [
+  {
+    question: `${airport.name} nerede?`,
+    answer: `${airport.name}, ${province?.name ?? ""} iline bağlı ${district?.name ?? ""} ilçesinde yer alır.${airport.locationNote ? ` ${airport.locationNote}.` : ""}`,
+  },
+  ...(displayTariff && province
+    ? [
+        {
+          question: `${airport.name} taksi ücreti nasıl hesaplanır?`,
+          answer: `Havalimanından yapılan taksi yolculukları da ${locativeOf(province.name)} geçerli taksimetre tarifesiyle ücretlendirilir: açılış ${formatCurrencyTRY(displayTariff.openingFee)}, kilometre başına ${formatCurrencyTRY(displayTariff.pricePerKm)}${tariff ? "" : " (tahmini)"}. Gideceğin yerin kilometresini hesaplama aracına girerek tahmini ücreti görebilirsin.`,
+        },
+      ]
+    : []),
+  {
+    question: "Havalimanı taksisinde köprü ve otoyol ücretini kim öder?",
+    answer:
+      "Güzergâh üzerinde köprü veya ücretli otoyol geçişi varsa bu tutar taksimetre ücretine ayrıca eklenir ve yaygın uygulamada yolcu tarafından karşılanır.",
+  },
+  {
+    question: "Havalimanında taksi mi, önceden ayarlanmış transfer mi?",
+    answer:
+      "Taksi, sırada beklemeden hemen yola çıkmanı sağlar ve taksimetreyle ücretlendirilir. Önceden ayarlanan transferde ise fiyat baştan sabittir ve karşılama hizmeti sunulur; kalabalık gruplar, çok bagajlı yolculuklar veya gece geç saatlerde varışlar için tercih edilebilir.",
+  },
+];
 
 const structuredData = [
   {
@@ -40,6 +84,19 @@ const structuredData = [
     name: title,
     description,
     url: canonicalUrl(path),
+    inLanguage: "tr-TR",
+    about: {
+      "@type": "Airport",
+      name: airport.name,
+      ...(airport.iataCode ? { iataCode: airport.iataCode } : {}),
+      ...(airport.website ? { url: airport.website } : {}),
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: district?.name,
+        addressRegion: province?.name,
+        addressCountry: "TR",
+      },
+    },
   },
 ];
 ---
@@ -54,7 +111,7 @@ const structuredData = [
   />
 
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">{airport.name} Taksi Ücreti</h1>
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">{airport.name} Taksi Ücreti</h1>
     <p class="text-ink-600 mt-3 text-lg">
       {airport.name}, {province?.name} iline bağlı {district?.name} ilçesinde yer alır.
       {airport.locationNote && ` ${airport.locationNote}.`}
@@ -75,12 +132,70 @@ const structuredData = [
       )
     }
 
+    {
+      displayTariff && (
+        <div class="mt-6">
+          <TariffStats tariff={displayTariff} isEstimate={!tariff} />
+        </div>
+      )
+    }
+
     <div class="mt-8">
-      <FareCalculator preselectedProvinceId={province?.id} />
+      <FareCalculator
+        preselectedProvinceId={province?.id}
+        defaultDistanceKm={20}
+        heading={`${airport.name} taksi ücreti hesapla`}
+      />
     </div>
   </section>
 
+  <PartnerOffers
+    kinds={["airportTransfer", "carRental", "hotel"]}
+    place={province?.name}
+    title={`${airport.name} için alternatifler`}
+  />
+
   <AdSlotAfterCalculator />
+
+  {
+    routes.length > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-6">
+        <h2 class="section-title">Popüler güzergâhlar</h2>
+        <ul class="mt-4 grid gap-2 sm:grid-cols-2">
+          {routes.map((r) => (
+            <li>
+              <a
+                href={`/rota/${r.slug}/`}
+                class="card-link border-ink-100 flex items-center justify-between rounded-2xl border bg-white px-4 py-3"
+              >
+                <span class="text-ink-900 font-bold">
+                  {r.originName} → {r.destinationName}
+                </span>
+                <span class="text-ink-500 text-sm">{r.distanceKm} km →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    province && district && districtStandCount > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-6">
+        <a
+          href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
+          class="card flex items-center justify-between gap-4"
+        >
+          <span>
+            <span class="text-ink-900 block font-extrabold">{district.name} taksi durakları</span>
+            <span class="text-ink-500 text-sm">{districtStandCount} durağın telefon ve adresi</span>
+          </span>
+          <span class="btn-dark px-4 py-2 text-sm">Gör →</span>
+        </a>
+      </section>
+    )
+  }
 
   <section class="mx-auto max-w-3xl px-4 py-10">
     <p class="text-ink-600 text-sm">
@@ -101,6 +216,23 @@ const structuredData = [
       </section>
     )
   }
+
+  <FaqSection entries={faqEntries} title={`${airport.name} Taksi — Sık Sorulanlar`} />
+
+  <section class="mx-auto max-w-3xl px-4 py-6">
+    <h2 class="section-title">Diğer havalimanları</h2>
+    <ul class="mt-4 flex flex-wrap gap-2">
+      {
+        otherAirports.map((a) => (
+          <li>
+            <a href={`/havalimani/${a.slug}/`} class="chip">
+              {a.name}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
 
   <section class="mx-auto max-w-3xl px-4 pb-10">
     <SourceNote

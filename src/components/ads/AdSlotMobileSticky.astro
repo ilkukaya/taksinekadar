@@ -1,13 +1,12 @@
 ---
 import AdSlot from "./AdSlot.astro";
-
-const pubId = import.meta.env.PUBLIC_ADSENSE_PUB_ID;
+import { ADSENSE_PUB_ID, AD_SLOT_IDS } from "../../config/monetization";
 ---
 
 {
-  pubId && (
-    <div class="border-ink-100 fixed inset-x-0 bottom-0 z-10 border-t bg-white md:hidden">
-      <AdSlot slotId="mobile-sticky" minHeight="60px" label="Mobil alt reklam alanı" />
+  ADSENSE_PUB_ID && AD_SLOT_IDS["mobile-sticky"] && (
+    <div class="border-ink-100 fixed inset-x-0 bottom-0 z-20 border-t bg-white/95 md:hidden">
+      <AdSlot slotId="mobile-sticky" minHeight="50px" label="Mobil alt reklam alanı" bare />
     </div>
   )
 }

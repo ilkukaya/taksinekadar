@@ -1,18 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Taksi Ne Kadar? logosu">
-  <rect width="512" height="512" rx="112" fill="#F5B700" />
-  <rect x="0" y="404" width="512" height="42" fill="#24272D" />
-  <rect x="0" y="404" width="56" height="42" fill="#F5B700" />
-  <rect x="112" y="404" width="56" height="42" fill="#F5B700" />
-  <rect x="224" y="404" width="56" height="42" fill="#F5B700" />
-  <rect x="336" y="404" width="56" height="42" fill="#F5B700" />
-  <rect x="448" y="404" width="64" height="42" fill="#F5B700" />
-  <text
-    x="256"
-    y="300"
-    text-anchor="middle"
-    font-family="Arial, Helvetica, sans-serif"
-    font-weight="700"
-    font-size="300"
-    fill="#24272D"
-  >?</text>
+  <defs>
+    <clipPath id="r"><rect width="512" height="512" rx="120"/></clipPath>
+    <pattern id="c" width="64" height="64" patternUnits="userSpaceOnUse">
+      <rect width="64" height="64" fill="#FFC629"/>
+      <rect width="32" height="32" fill="#121417"/>
+      <rect x="32" y="32" width="32" height="32" fill="#121417"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="512" height="512" fill="#FFC629"/>
+    <rect y="416" width="512" height="64" fill="url(#c)"/>
+    <path d="M170 150a86 86 0 1 1 130 74c-28 16-44 28-44 58v4" fill="none" stroke="#121417" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="256" cy="360" r="34" fill="#121417"/>
+  </g>
 </svg>

@@ -35,7 +35,9 @@ const province = getProvinceById(route.provinceId);
 const tariff = province ? getActiveTariff(province.id, "yellow") : undefined;
 const provisionalTariff = province && !tariff ? getProvisionalTariff(province.id) : undefined;
 const displayTariff = tariff ?? provisionalTariff;
-const fare = displayTariff ? calculateFare(displayTariff, { distanceKm: route.distanceKm }) : undefined;
+const fare = displayTariff
+  ? calculateFare(displayTariff, { distanceKm: route.distanceKm })
+  : undefined;
 
 const path = `/rota/${route.slug}/`;
 const title = withBrandSuffix(`${route.originName} - ${route.destinationName} Taksi Ücreti`);
@@ -64,7 +66,7 @@ const structuredData = [
   />
 
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">
       {route.originName} — {route.destinationName}
     </h1>
     <p class="text-ink-600 mt-3 text-lg">

@@ -4,12 +4,27 @@
  * Open Graph tag, footer brand text, manifest, and IndexNow submission reads from
  * this file — never hardcode "taksinekadar.com" or the brand name elsewhere.
  */
+/**
+ * Canonical origin. Defaults to the production domain; a build can override it with SITE_URL,
+ * and on Netlify it otherwise follows the site's primary URL (Netlify's built-in `URL` build
+ * variable) — so until the custom domain is attached, canonicals/sitemaps point at the live
+ * *.netlify.app address instead of a domain that doesn't serve the site yet, and they switch
+ * to the custom domain automatically on the first build after it becomes primary.
+ */
+const DEFAULT_ORIGIN = "https://taksinekadar.com";
+const env: Record<string, string | undefined> =
+  typeof process !== "undefined" && process.env ? process.env : {};
+const ORIGIN = (env.SITE_URL || env.URL || DEFAULT_ORIGIN)
+  .trim()
+  .replace(/^http:\/\//, "https://")
+  .replace(/\/+$/, "");
+
 export const SITE = {
   name: "Taksi Ne Kadar?",
   namePlain: "Taksi Ne Kadar",
   slug: "taksinekadar",
-  domain: "taksinekadar.com",
-  url: "https://taksinekadar.com",
+  domain: new URL(ORIGIN).host,
+  url: ORIGIN,
   locale: "tr-TR",
   language: "tr",
   country: "Türkiye",
@@ -23,7 +38,8 @@ export const SITE = {
   logoPath: "/logo.svg",
   faviconPath: "/favicon.ico",
   defaultOgImagePath: "/og-default.png",
-  contactEmail: "iletisim@taksinekadar.com",
+  // Override with PUBLIC_CONTACT_EMAIL until a mailbox/forwarder exists for the domain.
+  contactEmail: (env.PUBLIC_CONTACT_EMAIL || "iletisim@taksinekadar.com").trim(),
 } as const;
 
 /** Legacy/competitor brand strings that must never appear in published HTML. */

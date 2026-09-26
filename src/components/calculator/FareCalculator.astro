@@ -1,13 +1,17 @@
 ---
 import { getActiveProvinces } from "../../lib/repositories/provinces";
 import { getCurrentTariffs } from "../../lib/repositories/tariffs";
-import { VEHICLE_TYPES, VEHICLE_TYPE_LABELS } from "../../config/vehicle-types";
+import { VEHICLE_TYPE_LABELS } from "../../config/vehicle-types";
 
 interface Props {
   preselectedProvinceId?: string;
+  /** Distance shown on first render (only when a province is preselected). */
+  defaultDistanceKm?: number;
+  /** Visually compact variant without the outer card chrome. */
+  heading?: string;
 }
 
-const { preselectedProvinceId } = Astro.props;
+const { preselectedProvinceId, defaultDistanceKm = 10, heading } = Astro.props;
 
 const provinces = [...getActiveProvinces()].sort((a, b) => a.name.localeCompare(b.name, "tr"));
 
@@ -52,110 +56,208 @@ for (const t of [...activeTariffs, ...provisionalTariffs]) {
 }
 
 const availableProvinceIds = new Set(Object.keys(tariffLookup));
+const provinceMeta = Object.fromEntries(
+  provinces.map((p) => [p.id, { name: p.name, slug: p.slug }]),
+);
+const QUICK_DISTANCES = [3, 5, 10, 15, 25, 40];
+const initialKm = preselectedProvinceId ? defaultDistanceKm : undefined;
 ---
 
-<div class="card" data-fare-calculator>
-  <form id="fare-calculator-form" class="space-y-4">
-    <div class="grid gap-4 sm:grid-cols-2">
-      <label class="block">
-        <span class="text-ink-700 mb-1 block text-sm font-medium">İl</span>
-        <select
-          name="provinceId"
-          required
-          class="border-ink-200 w-full rounded-lg border px-3 py-2"
-        >
-          <option value="" disabled selected={!preselectedProvinceId}>İl seçin</option>
+<div class="@container" data-fare-calculator>
+  <div
+    class="border-ink-100 grid overflow-hidden rounded-3xl border bg-white shadow-[var(--shadow-lift)] @3xl:grid-cols-[1.15fr_1fr]"
+  >
+    <form class="space-y-5 p-5 sm:p-6" data-calc-form novalidate>
+      {heading && <p class="text-ink-900 text-lg font-extrabold">{heading}</p>}
+
+      <div class="grid gap-4 @md:grid-cols-[1fr_auto]">
+        <label class="block">
+          <span class="field-label">Hangi ildesin?</span>
+          <select name="provinceId" required class="field appearance-auto font-semibold">
+            <option value="" disabled selected={!preselectedProvinceId}>İl seçin</option>
+            {
+              provinces.map((p) => (
+                <option
+                  value={p.id}
+                  selected={p.id === preselectedProvinceId}
+                  disabled={!availableProvinceIds.has(p.id)}
+                >
+                  {p.name}
+                </option>
+              ))
+            }
+          </select>
+        </label>
+
+        <label class="hidden" data-vehicle-wrap>
+          <span class="field-label">Taksi türü</span>
+          <select name="vehicleType" class="field appearance-auto font-semibold"></select>
+        </label>
+      </div>
+
+      <div>
+        <label class="block">
+          <span class="field-label">Yolculuk mesafesi</span>
+          <div class="relative">
+            <input
+              type="number"
+              name="distanceKm"
+              inputmode="decimal"
+              min="0"
+              max="2000"
+              step="0.1"
+              required
+              value={initialKm}
+              placeholder="Örn. 12"
+              class="field pr-14 text-lg font-bold"
+            />
+            <span
+              class="text-ink-500 pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm font-bold"
+              >km</span
+            >
+          </div>
+        </label>
+        <div class="mt-2.5 flex flex-wrap gap-2" role="group" aria-label="Hızlı mesafe seçimi">
           {
-            provinces.map((p) => (
-              <option
-                value={p.id}
-                selected={p.id === preselectedProvinceId}
-                disabled={!availableProvinceIds.has(p.id)}
+            QUICK_DISTANCES.map((km) => (
+              <button
+                type="button"
+                class="chip"
+                data-km={km}
+                aria-pressed={km === initialKm ? "true" : "false"}
               >
-                {p.name}
-              </option>
+                {km} km
+              </button>
             ))
           }
-        </select>
-      </label>
+        </div>
+      </div>
 
-      <label class="block">
-        <span class="text-ink-700 mb-1 block text-sm font-medium">Araç türü</span>
-        <select name="vehicleType" class="border-ink-200 w-full rounded-lg border px-3 py-2">
-          {
-            VEHICLE_TYPES.map((vt) => (
-              <option value={vt} selected={vt === "yellow"}>
-                {VEHICLE_TYPE_LABELS[vt]}
-              </option>
-            ))
-          }
-        </select>
-      </label>
-
-      <label class="block">
-        <span class="text-ink-700 mb-1 block text-sm font-medium">Mesafe (km)</span>
-        <input
-          type="number"
-          name="distanceKm"
-          min="0"
-          step="0.1"
-          required
-          placeholder="Örn. 10"
-          class="border-ink-200 w-full rounded-lg border px-3 py-2"
-        />
-      </label>
-
-      <label class="block">
-        <span class="text-ink-700 mb-1 block text-sm font-medium"
-          >Bekleme süresi (dakika, isteğe bağlı)</span
+      <details class="group border-ink-100 rounded-2xl border px-4 py-3">
+        <summary
+          class="text-ink-700 flex cursor-pointer list-none items-center justify-between text-sm font-semibold marker:content-none [&::-webkit-details-marker]:hidden"
         >
-        <input
-          type="number"
-          name="waitingMinutes"
-          min="0"
-          step="1"
-          placeholder="0"
-          class="border-ink-200 w-full rounded-lg border px-3 py-2"
-        />
-      </label>
+          Bekleme süresi ve köprü/otoyol ekle
+          <span class="text-ink-400 transition-transform group-open:rotate-45" aria-hidden="true"
+            >＋</span
+          >
+        </summary>
+        <div class="mt-3 grid gap-3 @md:grid-cols-2">
+          <label class="block">
+            <span class="field-label text-xs">Trafikte bekleme (dakika)</span>
+            <input
+              type="number"
+              name="waitingMinutes"
+              inputmode="numeric"
+              min="0"
+              step="1"
+              placeholder="0"
+              class="field"
+            />
+          </label>
+          <label class="block">
+            <span class="field-label text-xs">Köprü / otoyol ücreti (TL)</span>
+            <input
+              type="number"
+              name="extraTollFee"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0"
+              class="field"
+            />
+          </label>
+        </div>
+      </details>
 
-      <label class="block sm:col-span-2">
-        <span class="text-ink-700 mb-1 block text-sm font-medium"
-          >Ek geçiş ücreti (köprü/otoyol, TL, isteğe bağlı)</span
+      <button type="submit" class="btn-primary w-full text-lg @3xl:hidden">Ücreti Hesapla</button>
+    </form>
+
+    <div class="meter m-3 mt-0 flex flex-col p-5 sm:p-6 @3xl:m-3 @3xl:ml-0" data-calc-result>
+      <div class="flex items-center justify-between">
+        <p class="text-ink-300 text-xs font-bold tracking-[0.16em] uppercase">Tahmini ücret</p>
+        <span
+          class="bg-taxi-400 text-ink-950 rounded-md px-2 py-0.5 text-[11px] font-extrabold tracking-wider"
+          >TAKSİ</span
         >
-        <input
-          type="number"
-          name="extraTollFee"
-          min="0"
-          step="0.01"
-          placeholder="0"
-          class="border-ink-200 w-full rounded-lg border px-3 py-2"
-        />
-      </label>
+      </div>
+      <p class="meter-digits mt-3 text-5xl leading-none @md:text-6xl" aria-live="polite">
+        <span data-out-total>—</span>
+      </p>
+      <p class="text-ink-300 mt-2 text-sm" data-out-caption>
+        İlini seç ve mesafeyi gir; ücret anında hesaplansın.
+      </p>
+
+      <dl class="tabular mt-5 space-y-2 border-t border-white/10 pt-4 text-sm" data-out-breakdown>
+        <div class="flex justify-between gap-4">
+          <dt class="text-ink-300">Açılış</dt>
+          <dd class="font-semibold" data-out-opening>—</dd>
+        </div>
+        <div class="flex justify-between gap-4">
+          <dt class="text-ink-300">Mesafe <span data-out-km></span></dt>
+          <dd class="font-semibold" data-out-distance>—</dd>
+        </div>
+        <div class="flex justify-between gap-4" data-row-waiting hidden>
+          <dt class="text-ink-300">Bekleme</dt>
+          <dd class="font-semibold" data-out-waiting>—</dd>
+        </div>
+        <div class="flex justify-between gap-4" data-row-toll hidden>
+          <dt class="text-ink-300">Köprü / otoyol</dt>
+          <dd class="font-semibold" data-out-toll>—</dd>
+        </div>
+        <div class="flex justify-between gap-4">
+          <dt class="text-ink-300">Km ücreti · İndi-bindi</dt>
+          <dd class="font-semibold" data-out-rates>—</dd>
+        </div>
+      </dl>
+
+      <p class="text-taxi-200 mt-3 hidden text-xs" data-out-minimum>
+        Hesaplanan tutar indi-bindi (minimum) ücretinin altında kaldığı için minimum ücret
+        gösteriliyor.
+      </p>
+
+      <div class="mt-auto pt-5">
+        <p class="text-ink-400 text-xs leading-relaxed" data-out-note>
+          Gerçek taksimetre tutarı trafik, bekleme ve güzergâha göre değişebilir.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="rounded-xl border border-white/15 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10 disabled:opacity-40"
+            data-share
+            disabled
+          >
+            Sonucu paylaş
+          </button>
+          <a
+            href="#"
+            class="text-taxi-300 hidden rounded-xl px-3 py-2 text-sm font-semibold underline-offset-4 hover:underline"
+            data-province-link>İl tarifesini gör →</a
+          >
+        </div>
+      </div>
     </div>
-
-    <button type="submit" class="btn-primary w-full sm:w-auto">Ücreti Hesapla</button>
-  </form>
-
-  <div id="fare-calculator-result" class="mt-6 hidden" aria-live="polite"></div>
-  <p id="fare-calculator-message" class="text-ink-600 mt-6 hidden text-sm" role="status"></p>
+  </div>
+  <p class="text-ink-500 mt-3 text-xs">
+    Girdileriniz kaydedilmez; hesaplama tamamen tarayıcınızda çalışır.
+  </p>
 
   <script
     type="application/json"
-    id="fare-calculator-tariff-data"
+    data-calc-data
     is:inline
-    set:html={JSON.stringify(tariffLookup)}
+    set:html={JSON.stringify({
+      tariffs: tariffLookup,
+      provinces: provinceMeta,
+      labels: VEHICLE_TYPE_LABELS,
+    })}
   />
 </div>
-
-<p class="text-ink-400 mt-3 text-xs">
-  Gerçek taksimetre tutarı trafik, bekleme, güzergâh, köprü ve otoyol geçişleri nedeniyle
-  değişebilir. Girdileriniz kaydedilmez; hesaplama tamamen tarayıcınızda çalışır.
-</p>
 
 <script>
   import { calculateFare } from "../../lib/calculation/fare-calculator";
   import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
+  import { locativeOf } from "../../lib/language/turkish-suffix";
 
   type TariffFields = {
     openingFee: number;
@@ -167,92 +269,210 @@ const availableProvinceIds = new Set(Object.keys(tariffLookup));
     sourceName: string;
     isEstimate: boolean;
   };
+  type CalcData = {
+    tariffs: Record<string, Record<string, TariffFields>>;
+    provinces: Record<string, { name: string; slug: string }>;
+    labels: Record<string, string>;
+  };
 
-  function escapeHtml(value: string): string {
-    return value
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
+  const VEHICLE_ORDER = [
+    "yellow",
+    "standard",
+    "turquoise",
+    "black",
+    "eight-plus-one",
+    "vip",
+    "local-special",
+  ];
 
-  const dataEl = document.getElementById("fare-calculator-tariff-data");
-  const tariffLookup: Record<string, Record<string, TariffFields>> = dataEl?.textContent
-    ? JSON.parse(dataEl.textContent)
-    : {};
+  document.querySelectorAll<HTMLElement>("[data-fare-calculator]").forEach((root) => {
+    const dataEl = root.querySelector("[data-calc-data]");
+    const data: CalcData = dataEl?.textContent
+      ? JSON.parse(dataEl.textContent)
+      : { tariffs: {}, provinces: {}, labels: {} };
+    const form = root.querySelector<HTMLFormElement>("[data-calc-form]")!;
+    const provinceSel = form.elements.namedItem("provinceId") as HTMLSelectElement;
+    const vehicleSel = form.elements.namedItem("vehicleType") as HTMLSelectElement;
+    const vehicleWrap = root.querySelector<HTMLElement>("[data-vehicle-wrap]")!;
+    const kmInput = form.elements.namedItem("distanceKm") as HTMLInputElement;
+    const waitInput = form.elements.namedItem("waitingMinutes") as HTMLInputElement;
+    const tollInput = form.elements.namedItem("extraTollFee") as HTMLInputElement;
+    const $ = (sel: string) => root.querySelector<HTMLElement>(sel)!;
+    const shareBtn = root.querySelector<HTMLButtonElement>("[data-share]")!;
+    const provinceLink = root.querySelector<HTMLAnchorElement>("[data-province-link]")!;
+    const onProvincePage = window.location.pathname.endsWith("-taksi-ucreti/");
 
-  const form = document.getElementById("fare-calculator-form") as HTMLFormElement | null;
-  const resultEl = document.getElementById("fare-calculator-result");
-  const messageEl = document.getElementById("fare-calculator-message");
-
-  function showMessage(text: string) {
-    if (!messageEl || !resultEl) return;
-    messageEl.textContent = text;
-    messageEl.classList.remove("hidden");
-    resultEl.classList.add("hidden");
-  }
-
-  form?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    if (!resultEl || !messageEl) return;
-
-    const formData = new FormData(form);
-    const provinceId = String(formData.get("provinceId") || "");
-    const vehicleType = String(formData.get("vehicleType") || "yellow");
-    const distanceKm = Number(formData.get("distanceKm"));
-    const waitingMinutes = Number(formData.get("waitingMinutes") || 0);
-    const extraTollFee = Number(formData.get("extraTollFee") || 0);
-
-    const tariffFields = tariffLookup[provinceId]?.[vehicleType];
-    if (!tariffFields) {
-      showMessage("Bu il/araç türü için güncel tarife henüz doğrulanmadı.");
-      return;
+    // Deep link support: ?il=istanbul&km=12&tur=yellow&bekleme=5&gecis=0
+    const params = new URLSearchParams(window.location.search);
+    const slugParam = params.get("il");
+    if (slugParam) {
+      const match = Object.entries(data.provinces).find(([, p]) => p.slug === slugParam);
+      if (match && data.tariffs[match[0]]) provinceSel.value = match[0];
+    } else if (!provinceSel.value) {
+      try {
+        const remembered = localStorage.getItem("tnk-last-province");
+        if (remembered && data.tariffs[remembered]) provinceSel.value = remembered;
+      } catch {
+        /* storage blocked */
+      }
     }
+    if (params.get("km")) kmInput.value = params.get("km")!;
+    if (params.get("bekleme")) waitInput.value = params.get("bekleme")!;
+    if (params.get("gecis")) tollInput.value = params.get("gecis")!;
+    if (provinceSel.value && !kmInput.value) kmInput.value = "10";
 
-    try {
-      const result = calculateFare(
-        {
-          id: `${provinceId}-${vehicleType}`,
-          provinceId,
-          vehicleType: vehicleType as never,
-          openingFee: tariffFields.openingFee,
-          pricePerKm: tariffFields.pricePerKm,
-          minimumFare: tariffFields.minimumFare,
-          waitingFeePerMinute: tariffFields.waitingFeePerMinute,
-          validFrom: tariffFields.validFrom,
-          lastVerifiedAt: tariffFields.lastVerifiedAt,
-          sourceName: tariffFields.sourceName,
-          sourceUrl: undefined,
-          sourceDocument: undefined,
-          sourceDate: undefined,
-          confidenceScore: 100,
-          status: "active",
-          createdAt: tariffFields.validFrom,
-          updatedAt: tariffFields.validFrom,
-        },
-        { distanceKm, waitingMinutes, extraTollFee },
+    function fillVehicles(preferred?: string | null) {
+      const available = Object.keys(data.tariffs[provinceSel.value] ?? {}).sort(
+        (a, b) => VEHICLE_ORDER.indexOf(a) - VEHICLE_ORDER.indexOf(b),
       );
-
-      const footerNote = tariffFields.isEstimate
-        ? "Bu il için genel bir hesaplayıcı ortalamasına dayanan tahmini bir tarife kullanılmıştır; resmî bir belediye/UKOME kararıyla ayrıca doğrulanmamıştır."
-        : `Tarife ${formatDateTR(result.validFrom)} tarihinde yürürlüğe girmiştir. Kaynak: ${escapeHtml(result.sourceName)}.`;
-
-      resultEl.innerHTML = `
-        <p class="text-sm text-ink-500">Tahmini toplam ücret</p>
-        <p class="text-3xl font-bold text-ink-900">${formatCurrencyTRY(result.estimatedTotal)}</p>
-        <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-ink-600">
-          <dt>Açılış ücreti</dt><dd>${formatCurrencyTRY(result.openingFee)}</dd>
-          <dt>Mesafe bedeli (${result.distanceKm} km)</dt><dd>${formatCurrencyTRY(result.distanceAmount)}</dd>
-          <dt>Bekleme bedeli</dt><dd>${formatCurrencyTRY(result.waitingAmount)}</dd>
-          <dt>Ek geçiş</dt><dd>${formatCurrencyTRY(result.extraTollFee)}</dd>
-          <dt>Minimum ücret uygulandı mı?</dt><dd>${result.minimumFareApplied ? "Evet" : "Hayır"}</dd>
-        </dl>
-        <p class="mt-4 text-xs text-ink-400">${footerNote}</p>
-      `;
-      resultEl.classList.remove("hidden");
-      messageEl.classList.add("hidden");
-    } catch (error) {
-      showMessage(error instanceof Error ? error.message : "Hesaplama sırasında bir hata oluştu.");
+      vehicleSel.innerHTML = available
+        .map((vt) => `<option value="${vt}">${data.labels[vt] ?? vt}</option>`)
+        .join("");
+      if (preferred && available.includes(preferred)) vehicleSel.value = preferred;
+      vehicleWrap.classList.toggle("hidden", available.length < 2);
+      vehicleWrap.classList.toggle("block", available.length >= 2);
     }
+
+    function syncChips() {
+      root.querySelectorAll<HTMLButtonElement>("[data-km]").forEach((chip) => {
+        chip.setAttribute("aria-pressed", String(chip.dataset.km === kmInput.value));
+      });
+    }
+
+    function reset(caption: string) {
+      $("[data-out-total]").textContent = "—";
+      $("[data-out-caption]").textContent = caption;
+      for (const sel of ["[data-out-opening]", "[data-out-distance]", "[data-out-rates]"]) {
+        $(sel).textContent = "—";
+      }
+      $("[data-out-km]").textContent = "";
+      $("[data-out-minimum]").classList.add("hidden");
+      shareBtn.disabled = true;
+    }
+
+    function update() {
+      syncChips();
+      const provinceId = provinceSel.value;
+      const province = data.provinces[provinceId];
+      const tariff = data.tariffs[provinceId]?.[vehicleSel.value];
+      if (province && !onProvincePage) {
+        provinceLink.href = `/${province.slug}-taksi-ucreti/`;
+        provinceLink.classList.remove("hidden");
+      }
+      if (!provinceId) return reset("İlini seç ve mesafeyi gir; ücret anında hesaplansın.");
+      if (!tariff) return reset("Bu il/araç türü için güncel tarife henüz doğrulanmadı.");
+
+      $("[data-out-rates]").textContent =
+        `${formatCurrencyTRY(tariff.pricePerKm)} · ${formatCurrencyTRY(tariff.minimumFare)}`;
+      $("[data-out-opening]").textContent = formatCurrencyTRY(tariff.openingFee);
+      $("[data-out-note]").textContent = tariff.isEstimate
+        ? "Bu il için resmî kararla doğrulanmamış, tahmini bir tarife kullanıldı. Gerçek taksimetre tutarı farklı olabilir."
+        : `${formatDateTR(tariff.validFrom)} tarihli güncel tarife ile hesaplandı${tariff.sourceName ? ` (kaynak: ${tariff.sourceName})` : ""}. Gerçek tutar trafik ve güzergâha göre değişebilir.`;
+
+      const distanceKm = Number(kmInput.value);
+      if (!kmInput.value || !Number.isFinite(distanceKm) || distanceKm <= 0) {
+        $("[data-out-total]").textContent = "—";
+        $("[data-out-caption]").textContent = `${province.name} · mesafeyi gir`;
+        $("[data-out-distance]").textContent = "—";
+        shareBtn.disabled = true;
+        return;
+      }
+
+      try {
+        const result = calculateFare(
+          {
+            id: `${provinceId}-${vehicleSel.value}`,
+            provinceId,
+            vehicleType: vehicleSel.value as never,
+            openingFee: tariff.openingFee,
+            pricePerKm: tariff.pricePerKm,
+            minimumFare: tariff.minimumFare,
+            waitingFeePerMinute: tariff.waitingFeePerMinute,
+            validFrom: tariff.validFrom,
+            lastVerifiedAt: tariff.lastVerifiedAt,
+            sourceName: tariff.sourceName,
+            sourceUrl: undefined,
+            sourceDocument: undefined,
+            sourceDate: undefined,
+            confidenceScore: 100,
+            status: "active",
+            createdAt: tariff.validFrom,
+            updatedAt: tariff.validFrom,
+          },
+          {
+            distanceKm: Math.min(distanceKm, 2000),
+            waitingMinutes: Math.max(0, Number(waitInput.value || 0)),
+            extraTollFee: Math.max(0, Number(tollInput.value || 0)),
+          },
+        );
+        $("[data-out-total]").textContent = formatCurrencyTRY(result.estimatedTotal);
+        $("[data-out-caption]").textContent =
+          `${province.name} · ${result.distanceKm} km · ${data.labels[vehicleSel.value] ?? ""}`;
+        $("[data-out-km]").textContent = `(${result.distanceKm} km)`;
+        $("[data-out-distance]").textContent = formatCurrencyTRY(result.distanceAmount);
+        $("[data-out-waiting]").textContent = formatCurrencyTRY(result.waitingAmount);
+        $("[data-out-toll]").textContent = formatCurrencyTRY(result.extraTollFee);
+        $("[data-row-waiting]").hidden = !result.waitingAmount;
+        $("[data-row-toll]").hidden = !result.extraTollFee;
+        $("[data-out-minimum]").classList.toggle("hidden", !result.minimumFareApplied);
+        shareBtn.disabled = false;
+        try {
+          localStorage.setItem("tnk-last-province", provinceId);
+        } catch {
+          /* storage blocked */
+        }
+      } catch (error) {
+        reset(error instanceof Error ? error.message : "Hesaplama sırasında bir hata oluştu.");
+      }
+    }
+
+    fillVehicles(params.get("tur"));
+    provinceSel.addEventListener("change", () => {
+      fillVehicles(vehicleSel.value);
+      if (!kmInput.value) kmInput.value = "10";
+      update();
+    });
+    form.addEventListener("input", (event) => {
+      if (event.target !== provinceSel) update();
+    });
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      update();
+      root
+        .querySelector("[data-calc-result]")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    root.querySelectorAll<HTMLButtonElement>("[data-km]").forEach((chip) =>
+      chip.addEventListener("click", () => {
+        kmInput.value = chip.dataset.km ?? "";
+        update();
+      }),
+    );
+
+    shareBtn.addEventListener("click", async () => {
+      const province = data.provinces[provinceSel.value];
+      if (!province) return;
+      const url = new URL("/taksi-ucreti-hesaplama/", window.location.origin);
+      url.searchParams.set("il", province.slug);
+      url.searchParams.set("km", kmInput.value);
+      if (vehicleSel.value && vehicleSel.value !== "yellow")
+        url.searchParams.set("tur", vehicleSel.value);
+      if (Number(waitInput.value) > 0) url.searchParams.set("bekleme", waitInput.value);
+      if (Number(tollInput.value) > 0) url.searchParams.set("gecis", tollInput.value);
+      const text = `${locativeOf(province.name)} ${kmInput.value} km taksi yaklaşık ${$("[data-out-total]").textContent}`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: "Taksi Ne Kadar?", text, url: url.toString() });
+        } else {
+          await navigator.clipboard.writeText(`${text} — ${url.toString()}`);
+          shareBtn.textContent = "Bağlantı kopyalandı ✓";
+          setTimeout(() => (shareBtn.textContent = "Sonucu paylaş"), 2000);
+        }
+      } catch {
+        /* user cancelled */
+      }
+    });
+
+    update();
   });
 </script>

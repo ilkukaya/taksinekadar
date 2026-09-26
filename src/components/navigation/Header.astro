@@ -1,55 +1,171 @@
 ---
 import { SITE } from "../../config/site";
+import SearchBox from "../search/SearchBox.astro";
 
 const NAV_LINKS = [
-  { href: "/taksi-ucreti-hesaplama/", label: "Ücret Hesaplama" },
-  { href: "/taksi-duraklari/", label: "Taksi Durakları" },
-  { href: "/iller/", label: "İller" },
+  { href: "/taksi-ucreti-hesaplama/", label: "Ücret Hesapla" },
   { href: "/tarifeler/", label: "Tarifeler" },
+  { href: "/taksi-duraklari/", label: "Taksi Durakları" },
   { href: "/havalimani/", label: "Havalimanı" },
+  { href: "/otogar/", label: "Otogar" },
   { href: "/rehber/", label: "Rehber" },
 ];
+
+const current = Astro.url.pathname;
+const isCurrent = (href: string) => current === href || current.startsWith(href);
 ---
 
-<header class="border-ink-100 border-b bg-white">
-  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-    <a href="/" class="text-ink-900 flex items-center gap-2 text-lg font-bold">
-      <img src="/logo.svg" alt={`${SITE.name} logosu`} width="32" height="32" />
-      <span>{SITE.name}</span>
+<header
+  class="border-ink-100/80 sticky top-0 z-30 border-b bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/80"
+>
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
+    <a
+      href="/"
+      class="text-ink-900 flex shrink-0 items-center gap-2.5 text-[1.0625rem] font-extrabold tracking-tight no-underline"
+      aria-label={`${SITE.name} ana sayfa`}
+    >
+      <img src="/logo.svg" alt="" width="34" height="34" class="rounded-[9px]" />
+      <span>Taksi Ne Kadar<span class="text-taxi-600">?</span></span>
     </a>
 
-    <nav class="hidden items-center gap-6 md:flex" aria-label="Ana menü">
+    <nav class="hidden items-center gap-1 lg:flex" aria-label="Ana menü">
       {
         NAV_LINKS.map((link) => (
-          <a href={link.href} class="text-ink-700 hover:text-ink-900 text-sm font-medium">
+          <a
+            href={link.href}
+            aria-current={isCurrent(link.href) ? "page" : undefined}
+            class="text-ink-600 hover:text-ink-900 hover:bg-paper-dim aria-[current=page]:text-ink-900 aria-[current=page]:bg-taxi-100 rounded-lg px-3 py-2 text-sm font-semibold transition-colors"
+          >
             {link.label}
           </a>
         ))
       }
     </nav>
 
-    <!-- Native <details> disclosure — accessible, keyboard-operable mobile menu with zero JavaScript. -->
-    <details class="relative md:hidden">
-      <summary
-        class="border-ink-200 text-ink-800 list-none rounded-lg border px-3 py-2 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden"
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        class="text-ink-700 hover:bg-paper-dim border-ink-200 flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors"
+        data-open-search
+        aria-haspopup="dialog"
       >
-        Menü
-      </summary>
-      <nav
-        class="border-ink-100 absolute right-0 z-20 mt-2 w-56 rounded-xl border bg-white p-2 shadow-lg"
-        aria-label="Mobil menü"
-      >
-        {
-          NAV_LINKS.map((link) => (
-            <a
-              href={link.href}
-              class="text-ink-800 hover:bg-paper-dim block rounded-lg px-3 py-2 text-sm"
-            >
-              {link.label}
-            </a>
-          ))
-        }
-      </nav>
-    </details>
+        <svg
+          class="h-[18px] w-[18px]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.2"
+          stroke-linecap="round"
+          aria-hidden="true"
+          ><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg
+        >
+        <span class="hidden sm:inline">Ara</span>
+        <span class="sr-only sm:hidden">Site içinde ara</span>
+      </button>
+
+      <!-- Native <details> disclosure — accessible, keyboard-operable mobile menu with zero JS. -->
+      <details class="group lg:hidden" data-mobile-menu>
+        <summary
+          class="bg-ink-900 flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl text-white marker:content-none [&::-webkit-details-marker]:hidden"
+          aria-label="Menüyü aç"
+        >
+          <svg
+            class="h-5 w-5 group-open:hidden"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"></path></svg
+          >
+          <svg
+            class="hidden h-5 w-5 group-open:block"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg
+          >
+        </summary>
+        <nav
+          class="border-ink-100 absolute inset-x-0 top-16 z-30 border-b bg-white px-4 pt-2 pb-5 shadow-[var(--shadow-lift)]"
+          aria-label="Mobil menü"
+        >
+          <ul class="mx-auto grid max-w-6xl grid-cols-2 gap-2">
+            {
+              NAV_LINKS.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    aria-current={isCurrent(link.href) ? "page" : undefined}
+                    class="bg-paper hover:bg-paper-dim aria-[current=page]:bg-taxi-100 text-ink-900 block rounded-xl px-4 py-3.5 text-[15px] font-bold"
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))
+            }
+            <li class="col-span-2">
+              <a
+                href="/iller/"
+                class="text-ink-600 block px-1 pt-2 text-sm font-semibold underline"
+              >
+                81 ilin tamamını gör →
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </details>
+    </div>
   </div>
+  <div class="checker-squares h-[6px] bg-[length:6px_6px]" aria-hidden="true"></div>
 </header>
+
+<dialog
+  class="backdrop:bg-ink-950/60 m-0 mx-auto mt-[10vh] w-[min(640px,calc(100%-2rem))] max-w-none overflow-visible bg-transparent p-0 backdrop:backdrop-blur-sm"
+  aria-label="Site içinde ara"
+  data-search-dialog
+>
+  <div class="bg-paper rounded-3xl p-4 shadow-[var(--shadow-lift)] sm:p-5">
+    <div class="mb-3 flex items-center justify-between">
+      <p class="text-ink-900 font-bold">Nereye gidiyorsun?</p>
+      <form method="dialog">
+        <button class="text-ink-500 hover:text-ink-900 text-sm font-semibold">Kapat (Esc)</button>
+      </form>
+    </div>
+    <SearchBox size="lg" />
+    <p class="text-ink-500 mt-3 text-xs">
+      Örnek: <span class="font-semibold">Kadıköy</span>, <span class="font-semibold">Antalya</span>,
+      <span class="font-semibold">Sabiha Gökçen</span>
+    </p>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>("[data-search-dialog]");
+  document.querySelectorAll("[data-open-search]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      if (!dialog) return;
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>("[data-search-input]")?.focus();
+    }),
+  );
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  document.addEventListener("keydown", (event) => {
+    const target = event.target as HTMLElement | null;
+    const typing = target && /INPUT|TEXTAREA|SELECT/.test(target.tagName);
+    if (event.key === "/" && !typing && dialog && !dialog.open) {
+      event.preventDefault();
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>("[data-search-input]")?.focus();
+    }
+  });
+  // Close the mobile menu after navigating within the same page (e.g. anchor links).
+  const menu = document.querySelector<HTMLDetailsElement>("[data-mobile-menu]");
+  menu
+    ?.querySelectorAll("a")
+    .forEach((a) => a.addEventListener("click", () => (menu.open = false)));
+</script>

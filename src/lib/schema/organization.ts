@@ -4,10 +4,19 @@ export function buildOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${SITE.url}/#organization`,
     name: SITE.name,
+    alternateName: SITE.namePlain,
     url: SITE.url,
-    logo: canonicalUrl(SITE.logoPath),
+    logo: {
+      "@type": "ImageObject",
+      url: canonicalUrl("/icons/icon-512.png"),
+      width: 512,
+      height: 512,
+    },
     description: SITE.description,
+    email: SITE.contactEmail,
+    areaServed: { "@type": "Country", name: "Türkiye" },
   };
 }
 
@@ -20,7 +29,10 @@ export function buildWebSiteSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${SITE.url}/#website`,
     name: SITE.name,
+    alternateName: SITE.namePlain,
+    publisher: { "@id": `${SITE.url}/#organization` },
     url: SITE.url,
     inLanguage: SITE.language,
     description: SITE.description,

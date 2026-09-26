@@ -71,7 +71,12 @@ const description = stand.address
   ? `${displayName} taksi durağı — ${district.name}, ${province.name} — ${stand.address}${stand.phonePrimary ? ` · ${stand.phonePrimary}` : ""}`
   : `${displayName} taksi durağı, ${district.name}, ${province.name}${stand.phonePrimary ? ` · ${stand.phonePrimary}` : ""}`;
 
-const meta = buildPageMeta({ title, description, path });
+const meta = buildPageMeta({
+  title,
+  description,
+  path,
+  ogImagePath: `/og/${province.slug}.jpg`,
+});
 
 const standPath = (s: TaxiStand) => `/${province.slug}/${district.slug}/${s.slug}/`;
 const mapSearchQuery = stand.mapQuery ?? `${displayName}, ${district.name}, ${province.name}`;
@@ -155,42 +160,62 @@ const structuredData = [
     ]}
   />
 
-  <section class="mx-auto max-w-2xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">{displayName}</h1>
+  <section class="mx-auto max-w-2xl px-4 pt-6 pb-10">
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">{displayName}</h1>
     <p class="text-ink-500 mt-1">
       {district.name}, {province.name}
     </p>
 
-    <div class="card mt-6">
-      {
-        stand.address && (
-          <p class="text-ink-700">
-            <span class="text-ink-500 text-sm">Adres</span>
-            <br />
-            {stand.address}
-          </p>
-        )
-      }
-      {
-        stand.phonePrimary && (
-          <p class="mt-4">
-            <span class="text-ink-500 text-sm">Telefon</span>
-            <br />
+    <div class="card mt-6 p-0">
+      <dl class="divide-ink-100 divide-y">
+        {
+          stand.address && (
+            <div class="px-5 py-4">
+              <dt class="text-ink-500 text-xs font-bold tracking-wide uppercase">Adres</dt>
+              <dd class="text-ink-900 mt-1 font-semibold">{stand.address}</dd>
+            </div>
+          )
+        }
+        <div class="px-5 py-4">
+          <dt class="text-ink-500 text-xs font-bold tracking-wide uppercase">Konum</dt>
+          <dd class="text-ink-900 mt-1 font-semibold">
+            <a href={`/${province.slug}/${district.slug}/taksi-duraklari/`} class="hover:underline"
+              >{district.name}</a
+            >, <a href={`/${province.slug}/taksi-duraklari/`} class="hover:underline"
+              >{province.name}</a
+            >
+          </dd>
+        </div>
+        {
+          stand.phonePrimary && (
+            <div class="px-5 py-4">
+              <dt class="text-ink-500 text-xs font-bold tracking-wide uppercase">Telefon</dt>
+              <dd class="text-ink-900 mt-1 text-xl font-extrabold tabular-nums">
+                {stand.phonePrimary}
+              </dd>
+            </div>
+          )
+        }
+      </dl>
+      <div class="bg-paper flex flex-col gap-2 rounded-b-2xl p-4 sm:flex-row">
+        {
+          stand.phonePrimary && (
             <a
               href={`tel:${formatPhoneForTel(stand.phonePrimary)}`}
-              class="text-ink-800 text-lg font-semibold underline"
+              class="btn-call justify-center text-lg sm:flex-1"
             >
-              {stand.phonePrimary}
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="currentColor" aria-hidden="true">
+                <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" />
+              </svg>
+              Hemen ara
             </a>
-          </p>
-        )
-      }
-      <div class="mt-4 flex flex-wrap gap-3">
+          )
+        }
         <a
           href={googleMapsUrl}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          class="text-ink-800 font-medium underline"
+          class="btn-ghost justify-center bg-white py-3"
         >
           Google Maps'te ara →
         </a>
@@ -198,7 +223,7 @@ const structuredData = [
           href={yandexMapsUrl}
           target="_blank"
           rel="noopener noreferrer nofollow"
-          class="text-ink-800 font-medium underline"
+          class="btn-ghost justify-center bg-white py-3"
         >
           Yandex Haritalar'da ara →
         </a>
@@ -206,7 +231,7 @@ const structuredData = [
     </div>
 
     <section class="mt-10">
-      <h2 class="text-ink-900 text-xl font-bold">{displayName} Hakkında</h2>
+      <h2 class="section-title">{displayName} Hakkında</h2>
       <p class="text-ink-700 mt-3 leading-relaxed">
         {
           `${displayName}, ${province.name} ilinin ${district.name} ilçesinde yer alan bir taksi durağıdır.`
@@ -219,7 +244,7 @@ const structuredData = [
     </section>
 
     <section class="mt-10">
-      <h2 class="text-ink-900 text-xl font-bold">{displayName} Nasıl Çağrılır?</h2>
+      <h2 class="section-title">{displayName} Nasıl Çağrılır?</h2>
       {
         stand.phonePrimary ? (
           <ol class="text-ink-700 mt-3 list-inside list-decimal space-y-2 leading-relaxed">
@@ -254,7 +279,7 @@ const structuredData = [
     {
       displayTariff && (
         <section class="mt-10">
-          <h2 class="text-ink-900 text-xl font-bold">{district.name} Taksi Ücretleri</h2>
+          <h2 class="section-title">{district.name} Taksi Ücretleri</h2>
           <div class="mt-3">
             {provisionalTariff ? (
               <EstimatedTariffSummary locationName={tariffLocationName} tariff={displayTariff} />
@@ -273,7 +298,7 @@ const structuredData = [
     }
 
     <section class="mt-10">
-      <h2 class="text-ink-900 text-xl font-bold">
+      <h2 class="section-title">
         {relativeLocativeOf(district.name)} Diğer Taksi Durakları
       </h2>
       {
@@ -304,7 +329,7 @@ const structuredData = [
     </section>
 
     <section class="mt-10">
-      <h2 class="text-ink-900 text-xl font-bold">Sık Sorulan Sorular</h2>
+      <h2 class="section-title">Sık Sorulan Sorular</h2>
       <div class="mt-3 space-y-2">
         {
           faqs.map((faq) => (

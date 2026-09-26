@@ -9,23 +9,40 @@ interface Props {
 
 const { tariff } = Astro.props;
 const rows = buildDistanceReferenceTable(tariff);
+const max = Math.max(...rows.map((r) => r.estimatedTotal));
 ---
 
-<div class="overflow-x-auto">
-  <table class="w-full min-w-[420px] border-collapse text-left text-sm">
+<div class="border-ink-100 overflow-hidden rounded-2xl border bg-white">
+  <table class="w-full border-collapse text-left text-sm">
     <caption class="sr-only">Mesafeye göre tahmini taksi ücreti</caption>
-    <thead>
-      <tr class="border-ink-200 text-ink-500 border-b">
-        <th scope="col" class="py-2 pr-4 font-medium"> Mesafe </th>
-        <th scope="col" class="py-2 font-medium"> Tahmini ücret </th>
+    <thead class="bg-paper">
+      <tr>
+        <th scope="col" class="w-24 px-4 py-3">Mesafe</th>
+        <th scope="col" class="px-4 py-3">Tahmini ücret</th>
       </tr>
     </thead>
     <tbody>
       {
         rows.map((row) => (
-          <tr class="border-ink-100 border-b">
-            <td class="text-ink-700 py-2 pr-4">{row.distanceKm} km</td>
-            <td class="text-ink-900 py-2 font-semibold">{formatCurrencyTRY(row.estimatedTotal)}</td>
+          <tr class="border-ink-100 border-t">
+            <td class="text-ink-700 px-4 py-3 font-semibold">{row.distanceKm} km</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center gap-3">
+                <span class="text-ink-900 w-24 shrink-0 font-extrabold">
+                  {formatCurrencyTRY(row.estimatedTotal)}
+                </span>
+                <span
+                  class="bg-paper-dim hidden h-2 flex-1 overflow-hidden rounded-full sm:block"
+                  aria-hidden="true"
+                >
+                  <span
+                    class="bg-taxi-400 block h-full rounded-full"
+                    style={`width:${Math.max(4, (row.estimatedTotal / max) * 100).toFixed(1)}%`}
+                  />
+                </span>
+                {row.minimumFareApplied && <span class="text-ink-500 text-xs">minimum ücret</span>}
+              </div>
+            </td>
           </tr>
         ))
       }

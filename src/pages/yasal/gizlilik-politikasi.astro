@@ -22,30 +22,77 @@ const meta = buildPageMeta({
   />
 
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">Gizlilik Politikası</h1>
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">Gizlilik Politikası</h1>
 
-    <h2 class="text-ink-900 mt-8 text-xl font-bold">Topladığımız veriler</h2>
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">Topladığımız veriler</h2>
     <p class="text-ink-600 mt-2">
       {SITE.name}, kullanıcı hesabı, üyelik veya profil oluşturmaz; isim, e-posta, telefon veya
       konum bilgisi toplamaz. Taksi ücreti hesaplama aracına girdiğiniz il, mesafe ve süre bilgileri
       yalnızca tarayıcınızda işlenir; sunucularımıza gönderilmez veya kaydedilmez.
     </p>
 
-    <h2 class="text-ink-900 mt-8 text-xl font-bold">Analitik</h2>
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">Tarayıcıda saklanan bilgiler</h2>
     <p class="text-ink-600 mt-2">
-      Site trafiğini anlamak için çerezsiz veya minimum veriyle çalışan bir analitik çözümü
-      kullanılabilir. Bu araçlar bireysel kullanıcıları tanımlamaz.
+      Hesaplama aracı, bir sonraki ziyaretinizde kolaylık olsun diye en son seçtiğiniz ili
+      tarayıcınızın yerel depolamasında (localStorage) tutabilir. Bu bilgi cihazınızdan çıkmaz;
+      tarayıcı ayarlarınızdan dilediğiniz zaman silebilirsiniz.
     </p>
 
-    <h2 class="text-ink-900 mt-8 text-xl font-bold">Reklamlar</h2>
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">Analitik</h2>
     <p class="text-ink-600 mt-2">
-      Site, gelir modeli olarak görüntülü reklam kullanabilir (ör. Google AdSense). Bu reklam
-      sağlayıcıları, kendi gizlilik politikaları kapsamında çerez kullanabilir. Reklam sistemi
-      etkinleştirildiğinde, yürürlükteki mevzuatın gerektirdiği asgari onay (consent) mekanizması da
-      devreye alınır.
+      Site trafiğini anlamak için Cloudflare Web Analytics gibi çerez kullanmayan bir ölçüm aracı
+      ve/veya Google Analytics kullanılabilir. Google Analytics kullanıldığında IP adresleri
+      anonimleştirilir; toplanan veriler (ziyaret edilen sayfa, cihaz türü, yaklaşık konum gibi)
+      yalnızca toplu istatistik amacıyla işlenir ve bireysel kullanıcıları tanımlamak için
+      kullanılmaz.
     </p>
 
-    <h2 class="text-ink-900 mt-8 text-xl font-bold">İletişim</h2>
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">Reklamlar ve çerezler</h2>
+    <p class="text-ink-600 mt-2">
+      Site, ücretsiz kalabilmek için Google AdSense aracılığıyla reklam gösterebilir. Google dahil
+      üçüncü taraf reklam sağlayıcıları, kullanıcının bu siteye ve internetteki diğer sitelere
+      yaptığı önceki ziyaretlere dayalı reklamlar sunmak için çerez kullanır. Google'ın reklam
+      çerezlerini kullanması, Google ve iş ortaklarının bu siteye ve/veya internetteki diğer
+      sitelere yapılan ziyaretlere dayalı olarak kullanıcılara reklam sunmasını sağlar.
+    </p>
+    <p class="text-ink-600 mt-2">
+      Kişiselleştirilmiş reklamcılığı <a
+        href="https://adssettings.google.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-ink-800 font-medium underline">Google Reklam Ayarları</a
+      > sayfasından devre dışı bırakabilir; üçüncü taraf sağlayıcıların çerezlerini <a
+        href="https://www.aboutads.info/choices/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-ink-800 font-medium underline">aboutads.info</a
+      > üzerinden yönetebilirsiniz. Google'ın verileri nasıl kullandığı hakkında ayrıntılı bilgiye <a
+        href="https://policies.google.com/technologies/partner-sites"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-ink-800 font-medium underline">buradan</a
+      > ulaşabilirsiniz.
+    </p>
+
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">İş ortağı (affiliate) bağlantıları</h2>
+    <p class="text-ink-600 mt-2">
+      Bazı sayfalarda havalimanı transferi, araç kiralama veya konaklama gibi hizmetler için "İş
+      ortağı bağlantısı" olarak işaretlenmiş bağlantılar bulunabilir. Bu bağlantılar üzerinden
+      yapılan işlemlerden site komisyon alabilir; bu, sizin ödediğiniz fiyatı değiştirmez ve tarife
+      bilgilerimizi hiçbir şekilde etkilemez. Bu bağlantılara tıkladığınızda ilgili sağlayıcının
+      kendi gizlilik politikası geçerli olur.
+    </p>
+
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">KVKK kapsamındaki haklarınız</h2>
+    <p class="text-ink-600 mt-2">
+      6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında; kişisel verilerinizin işlenip
+      işlenmediğini öğrenme, işlenmişse bilgi talep etme, düzeltilmesini veya silinmesini isteme
+      haklarına sahipsiniz. Sitemiz doğrudan kişisel veri toplamadığından, talepleriniz çoğunlukla
+      yukarıda belirtilen üçüncü taraf hizmet sağlayıcılarını ilgilendirecektir; yine de her türlü
+      talebiniz için bizimle iletişime geçebilirsiniz.
+    </p>
+
+    <h2 class="section-title mt-8 text-2xl sm:text-2xl">İletişim</h2>
     <p class="text-ink-600 mt-2">
       Gizlilikle ilgili sorularınız için <a
         href="/yasal/iletisim/"
