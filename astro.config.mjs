@@ -3,7 +3,11 @@ import tailwindcss from "@tailwindcss/vite";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const SITE_URL = "https://taksinekadar.com";
+// Mirrors src/config/site.ts: SITE_URL override → Netlify's primary URL → production domain.
+const SITE_URL = (process.env.SITE_URL || process.env.URL || "https://taksinekadar.com")
+  .trim()
+  .replace(/^http:\/\//, "https://")
+  .replace(/\/+$/, "");
 
 /**
  * Sitemap and canonical hosts are generated from this single origin (src/config/site.ts

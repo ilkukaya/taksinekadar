@@ -1,12 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Taksi Ne Kadar? logosu">
-  <rect width="512" height="512" fill="#F5B700" />
-  <text
-    x="256"
-    y="330"
-    text-anchor="middle"
-    font-family="Arial, Helvetica, sans-serif"
-    font-weight="700"
-    font-size="220"
-    fill="#24272D"
-  >?</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs><pattern id="c" width="48" height="48" patternUnits="userSpaceOnUse"><rect width="48" height="48" fill="#FFC629"/><rect width="24" height="24" fill="#121417"/><rect x="24" y="24" width="24" height="24" fill="#121417"/></pattern></defs>
+  <rect width="512" height="512" fill="#FFC629"/>
+  <rect y="364" width="512" height="48" fill="url(#c)"/>
+  <g transform="translate(256 250) scale(0.62) translate(-256 -250)">
+    <path d="M170 150a86 86 0 1 1 130 74c-28 16-44 28-44 58v4" fill="none" stroke="#121417" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="256" cy="360" r="34" fill="#121417"/>
+  </g>
 </svg>

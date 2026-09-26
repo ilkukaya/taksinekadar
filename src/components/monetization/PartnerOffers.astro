@@ -1,0 +1,101 @@
+---
+/**
+ * Contextual partner (affiliate) offers. Each card renders only when its tracking URL is
+ * configured via env (src/config/monetization.ts), is clearly labelled as a partner link,
+ * and carries rel="sponsored nofollow" as Google requires for paid/affiliate links.
+ */
+import { AFFILIATE } from "../../config/monetization";
+
+type Kind = "airportTransfer" | "carRental" | "hotel" | "busTicket";
+
+interface Props {
+  kinds: Kind[];
+  /** City or place name used in the card copy, e.g. "Antalya". */
+  place?: string;
+  title?: string;
+}
+
+const { kinds, place, title = "Yolculuğunu önceden planla" } = Astro.props;
+const where = place ? `${place} için ` : "";
+
+const CARDS: Record<
+  Kind,
+  { url?: string; name: string; heading: string; text: string; icon: string }
+> = {
+  airportTransfer: {
+    url: AFFILIATE.airportTransfer,
+    name: AFFILIATE.airportTransferName,
+    heading: "Sabit fiyatlı transfer",
+    text: `${where}ücreti önceden belli, karşılamalı havalimanı transferi ayırt.`,
+    icon: "M3 13h2l2-5h10l2 5h2M5 13v4h2m10 0h2v-4M7 17h10M8 13h8",
+  },
+  carRental: {
+    url: AFFILIATE.carRental,
+    name: AFFILIATE.carRentalName,
+    heading: "Araç kirala",
+    text: `${where}günlük araç kiralama fiyatlarını karşılaştır.`,
+    icon: "M4 16V11l2-5h12l2 5v5M4 16h16M4 16v2m16-2v2M7 13h.01M17 13h.01",
+  },
+  hotel: {
+    url: AFFILIATE.hotel,
+    name: AFFILIATE.hotelName,
+    heading: "Konaklama bul",
+    text: `${where}otel fiyatlarını karşılaştır.`,
+    icon: "M3 20V8l9-4 9 4v12M9 20v-6h6v6",
+  },
+  busTicket: {
+    url: AFFILIATE.busTicket,
+    name: AFFILIATE.busTicketName,
+    heading: "Otobüs bileti",
+    text: `${where}şehirlerarası otobüs seferlerini karşılaştır.`,
+    icon: "M5 17V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11M5 17h14M5 11h14M8 20v-3m8 3v-3",
+  },
+};
+
+const offers = kinds.map((k) => CARDS[k]).filter((c) => c.url);
+---
+
+{
+  offers.length > 0 && (
+    <aside class="mx-auto my-8 max-w-6xl px-4" aria-label="İş ortağı teklifleri">
+      <div class="border-ink-100 rounded-3xl border bg-white p-5 sm:p-6">
+        <div class="flex items-baseline justify-between gap-3">
+          <p class="text-ink-900 text-lg font-extrabold">{title}</p>
+          <span class="text-ink-400 text-[11px] font-semibold tracking-wide uppercase">
+            İş ortağı bağlantısı
+          </span>
+        </div>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {offers.map((offer) => (
+            <a
+              href={offer.url}
+              rel="sponsored nofollow noopener"
+              target="_blank"
+              class="card-link border-ink-100 bg-paper hover:border-taxi-400 flex items-start gap-3 rounded-2xl border p-4"
+              data-partner={offer.name}
+            >
+              <span class="bg-taxi-400 text-ink-900 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d={offer.icon} />
+                </svg>
+              </span>
+              <span>
+                <span class="text-ink-900 block font-bold">{offer.heading} →</span>
+                <span class="text-ink-600 mt-0.5 block text-sm">{offer.text}</span>
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </aside>
+  )
+}

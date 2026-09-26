@@ -1,24 +1,96 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import FaqSection from "../../components/common/FaqSection.astro";
+import AdSlotInContent from "../../components/ads/AdSlotInContent.astro";
 import { buildPageMeta } from "../../lib/seo/meta";
+import { canonicalUrl } from "../../config/site";
 import { getAllProvincesWithStats } from "../../lib/repositories/stats";
+import { getActiveTariff, getProvisionalTariff } from "../../lib/repositories/tariffs";
+import { calculateFare } from "../../lib/calculation/fare-calculator";
+import { formatCurrencyTRY, formatDateTR } from "../../lib/utils/format";
 
-const provinces = [...getAllProvincesWithStats()].sort((a, b) =>
-  a.name.localeCompare(b.name, "tr"),
-);
-const verified = provinces.filter((p) => p.hasVerifiedTariff);
-const unverified = provinces.filter((p) => !p.hasVerifiedTariff);
+const rows = [...getAllProvincesWithStats()]
+  .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+  .map((province) => {
+    const verified = getActiveTariff(province.id, "yellow");
+    const tariff = verified ?? getProvisionalTariff(province.id);
+    return {
+      province,
+      tariff,
+      verified: !!verified,
+      tenKm: tariff ? calculateFare(tariff, { distanceKm: 10 }).estimatedTotal : undefined,
+    };
+  })
+  .filter((r) => r.tariff);
+
+const verifiedRows = rows.filter((r) => r.verified);
+const byTenKm = [...verifiedRows].sort((a, b) => a.tenKm! - b.tenKm!);
+const cheapest = byTenKm[0];
+const priciest = byTenKm[byTenKm.length - 1];
+const avgOpening =
+  verifiedRows.reduce((sum, r) => sum + r.tariff!.openingFee, 0) / (verifiedRows.length || 1);
+const latest = [...verifiedRows].sort((a, b) =>
+  b.tariff!.validFrom.localeCompare(a.tariff!.validFrom),
+)[0];
+
+const faqEntries = [
+  ...(cheapest && priciest
+    ? [
+        {
+          question: "Türkiye'de taksi en ucuz hangi ilde?",
+          answer: `Kaynağını doğruladığımız ${verifiedRows.length} il arasında 10 km'lik bir yolculuk için en düşük tahmini ücret ${cheapest.province.name} ilindedir (${formatCurrencyTRY(cheapest.tenKm!)}). Tahmini ücretler illerin açılış, km ve indi-bindi tarifelerinden hesaplanır.`,
+        },
+        {
+          question: "Türkiye'de taksi en pahalı hangi ilde?",
+          answer: `Doğrulanmış tarifeler arasında 10 km için en yüksek tahmini ücret ${priciest.province.name} ilindedir (${formatCurrencyTRY(priciest.tenKm!)}).`,
+        },
+      ]
+    : []),
+  {
+    question: "Türkiye'de ortalama taksi açılış ücreti ne kadar?",
+    answer: `Kaynağı doğrulanmış ${verifiedRows.length} ilin sarı taksi tarifelerine göre ortalama açılış ücreti yaklaşık ${formatCurrencyTRY(Math.round(avgOpening))}'dir.`,
+  },
+  ...(latest
+    ? [
+        {
+          question: "Taksi tarifesi en son hangi ilde güncellendi?",
+          answer: `Takip ettiğimiz tarifeler arasında en son ${latest.province.name} tarifesi ${formatDateTR(latest.tariff!.validFrom)} tarihinde yürürlüğe girmiştir.`,
+        },
+      ]
+    : []),
+];
 
 const meta = buildPageMeta({
-  title: "Türkiye Taksi Tarifeleri — İl İl Güncel Ücretler",
-  description:
-    "Türkiye genelinde il il güncel taksi tarifeleri: açılış ücreti, kilometre ücreti ve indi-bindi ücreti. Kaynağı doğrulanmış tarifeler ayrı listelenir.",
+  title: "Türkiye Taksi Tarifeleri — 81 İl Karşılaştırmalı Tablo",
+  description: `81 ilin güncel taksi tarifesi tek tabloda: açılış ücreti, km ücreti, indi-bindi ve 10 km tahmini ücret. ${verifiedRows.length} ilde kaynağı doğrulanmış tarife, sıralanabilir karşılaştırma.`,
   path: "/tarifeler/",
 });
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name: "Türkiye il bazında taksi tarifeleri",
+    description:
+      "Türkiye'nin 81 ili için taksi açılış ücreti, kilometre ücreti ve indi-bindi (minimum) ücreti; doğrulanmış ve tahmini tarifeler ayrı işaretli.",
+    url: canonicalUrl("/tarifeler/"),
+    inLanguage: "tr-TR",
+    spatialCoverage: { "@type": "Place", name: "Türkiye" },
+    isAccessibleForFree: true,
+    creator: { "@type": "Organization", name: "Taksi Ne Kadar?" },
+    ...(latest ? { dateModified: latest.tariff!.lastVerifiedAt } : {}),
+    variableMeasured: ["Açılış ücreti (TL)", "Kilometre ücreti (TL)", "İndi-bindi ücreti (TL)"],
+    distribution: {
+      "@type": "DataDownload",
+      encodingFormat: "text/plain",
+      contentUrl: canonicalUrl("/llms-full.txt"),
+    },
+  },
+];
 ---
 
-<BaseLayout meta={meta}>
+<BaseLayout meta={meta} structuredData={structuredData}>
   <Breadcrumb
     items={[
       { name: "Ana Sayfa", path: "/" },
@@ -26,52 +98,178 @@ const meta = buildPageMeta({
     ]}
   />
 
-  <section class="mx-auto max-w-4xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">Türkiye Taksi Tarifeleri</h1>
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-10">
+    <p class="eyebrow">{rows.length} il · karşılaştırmalı</p>
+    <h1 class="mt-2 text-3xl leading-tight sm:text-5xl">Türkiye Taksi Tarifeleri</h1>
     <p class="text-ink-600 mt-3 max-w-2xl text-lg">
-      İl bazında güncel taksi tarifelerine buradan ulaşabilirsiniz. Her sayfada tarifenin kaynağı ve
-      yürürlük tarihi belirtilir.
+      81 ilin açılış, kilometre ve indi-bindi ücretleri tek tabloda. Sütun başlıklarına dokunarak
+      sıralayabilir, il adıyla filtreleyebilirsin. Doğrulanmış tarifeler kaynak ve tarihiyle ilgili
+      il sayfasında yer alır.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">
-      Kaynağı Doğrulanmış Tarifeler ({verified.length})
-    </h2>
-    <ul class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
-      {
-        verified.map((p) => (
-          <li>
-            <a
-              href={`/${p.slug}-taksi-ucreti/`}
-              class="text-ink-700 hover:text-ink-900 hover:underline"
-            >
-              {p.name}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-
     {
-      unverified.length > 0 && (
-        <>
-          <h2 class="text-ink-900 mt-12 text-xl font-bold">
-            Tahmini Tarifeli İller ({unverified.length})
-          </h2>
-          <p class="text-ink-500 mt-2 text-sm">
-            Bu illerde tarifeyi henüz resmî bir belediye/UKOME kararıyla doğrulayamadık; sayfalarında
-            genel bir hesaplayıcı ortalamasına dayanan tahmini rakamlar gösterilir.
-          </p>
-          <ul class="text-ink-500 mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
-            {unverified.map((p) => (
-              <li>
-                <a href={`/${p.slug}-taksi-ucreti/`} class="hover:text-ink-700 hover:underline">
-                  {p.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </>
+      cheapest && priciest && (
+        <div class="mt-6 grid gap-3 sm:grid-cols-3">
+          <div class="border-ink-100 rounded-2xl border bg-white p-4">
+            <p class="text-ink-500 text-xs font-bold tracking-wide uppercase">10 km en uygun</p>
+            <p class="text-ink-900 mt-1 text-xl font-black">
+              {cheapest.province.name} · {formatCurrencyTRY(cheapest.tenKm!)}
+            </p>
+          </div>
+          <div class="border-ink-100 rounded-2xl border bg-white p-4">
+            <p class="text-ink-500 text-xs font-bold tracking-wide uppercase">10 km en yüksek</p>
+            <p class="text-ink-900 mt-1 text-xl font-black">
+              {priciest.province.name} · {formatCurrencyTRY(priciest.tenKm!)}
+            </p>
+          </div>
+          <div class="border-ink-100 rounded-2xl border bg-white p-4">
+            <p class="text-ink-500 text-xs font-bold tracking-wide uppercase">Ortalama açılış</p>
+            <p class="text-ink-900 mt-1 text-xl font-black">
+              {formatCurrencyTRY(Math.round(avgOpening))}
+            </p>
+          </div>
+        </div>
       )
     }
+
+    <div class="mt-8 flex flex-wrap items-center gap-3" data-table-tools>
+      <label class="relative w-full sm:w-72">
+        <span class="sr-only">İl ara</span>
+        <input type="search" placeholder="İl ara…" class="field py-2.5" data-filter />
+      </label>
+      <label class="text-ink-700 flex items-center gap-2 text-sm font-semibold">
+        <input type="checkbox" class="accent-ink-900 h-4 w-4" data-only-verified />
+        Yalnızca doğrulanmış tarifeler
+      </label>
+    </div>
+
+    <div class="border-ink-100 mt-4 overflow-x-auto rounded-2xl border bg-white">
+      <table class="w-full min-w-[640px] border-collapse text-left text-sm" data-sortable>
+        <caption class="sr-only">81 il taksi tarifeleri karşılaştırma tablosu</caption>
+        <thead class="bg-paper">
+          <tr>
+            <th scope="col" class="px-4 py-3"
+              ><button type="button" data-sort="name" class="font-semibold uppercase">İl ↕</button
+              ></th
+            >
+            <th scope="col" class="px-3 py-3"
+              ><button type="button" data-sort="opening" class="font-semibold uppercase"
+                >Açılış ↕</button
+              ></th
+            >
+            <th scope="col" class="px-3 py-3"
+              ><button type="button" data-sort="km" class="font-semibold uppercase">Km ↕</button
+              ></th
+            >
+            <th scope="col" class="px-3 py-3"
+              ><button type="button" data-sort="min" class="font-semibold uppercase"
+                >İndi-bindi ↕</button
+              ></th
+            >
+            <th scope="col" class="px-3 py-3"
+              ><button type="button" data-sort="ten" class="font-semibold uppercase">10 km ↕</button
+              ></th
+            >
+            <th scope="col" class="px-4 py-3">Durum</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rows.map(({ province, tariff, verified, tenKm }) => (
+              <tr
+                class="border-ink-100 border-t"
+                data-name={province.name}
+                data-opening={tariff!.openingFee}
+                data-km={tariff!.pricePerKm}
+                data-min={tariff!.minimumFare}
+                data-ten={tenKm}
+                data-verified={verified ? "1" : "0"}
+              >
+                <td class="px-4 py-3">
+                  <a
+                    href={`/${province.slug}-taksi-ucreti/`}
+                    class="text-ink-900 font-bold hover:underline"
+                  >
+                    {province.name}
+                  </a>
+                </td>
+                <td class="text-ink-700 px-3 py-3">{formatCurrencyTRY(tariff!.openingFee)}</td>
+                <td class="text-ink-700 px-3 py-3">{formatCurrencyTRY(tariff!.pricePerKm)}</td>
+                <td class="text-ink-700 px-3 py-3">{formatCurrencyTRY(tariff!.minimumFare)}</td>
+                <td class="text-ink-900 px-3 py-3 font-extrabold">{formatCurrencyTRY(tenKm!)}</td>
+                <td class="px-4 py-3 text-xs">
+                  {verified ? (
+                    <span class="bg-call-50 text-call-700 rounded-full px-2 py-0.5 font-bold whitespace-nowrap">
+                      Doğrulandı · {formatDateTR(tariff!.validFrom)}
+                    </span>
+                  ) : (
+                    <span class="bg-taxi-100 text-taxi-900 rounded-full px-2 py-0.5 font-bold">
+                      Tahmini
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="text-ink-500 mt-3 text-xs">
+      10 km tutarı bekleme ve köprü/otoyol hariç tahmindir. "Tahmini" işaretli illerin tarifesi
+      resmî bir belediye/UKOME kararıyla ayrıca doğrulanmamıştır.
+    </p>
   </section>
+
+  <AdSlotInContent />
+
+  <FaqSection entries={faqEntries} title="Taksi Tarifeleri Hakkında Sık Sorulanlar" />
 </BaseLayout>
+
+<script>
+  const table = document.querySelector<HTMLTableElement>("[data-sortable]");
+  const tbody = table?.tBodies[0];
+  const filter = document.querySelector<HTMLInputElement>("[data-filter]");
+  const onlyVerified = document.querySelector<HTMLInputElement>("[data-only-verified]");
+  let sortKey = "name";
+  let asc = true;
+
+  const norm = (s: string) =>
+    s
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c");
+
+  function apply() {
+    if (!tbody) return;
+    const rows = [...tbody.rows];
+    rows.sort((a, b) => {
+      const av = a.dataset[sortKey] ?? "";
+      const bv = b.dataset[sortKey] ?? "";
+      const cmp = sortKey === "name" ? av.localeCompare(bv, "tr") : Number(av) - Number(bv);
+      return asc ? cmp : -cmp;
+    });
+    const q = norm(filter?.value.trim() ?? "");
+    for (const row of rows) {
+      const visible =
+        (!q || norm(row.dataset.name ?? "").includes(q)) &&
+        (!onlyVerified?.checked || row.dataset.verified === "1");
+      row.hidden = !visible;
+      tbody.appendChild(row);
+    }
+  }
+
+  table?.querySelectorAll<HTMLButtonElement>("[data-sort]").forEach((btn) =>
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.sort!;
+      asc = key === sortKey ? !asc : true;
+      sortKey = key;
+      apply();
+    }),
+  );
+  filter?.addEventListener("input", apply);
+  onlyVerified?.addEventListener("change", apply);
+</script>

@@ -5,11 +5,13 @@ import FareCalculator from "../components/calculator/FareCalculator.astro";
 import AdSlotAfterCalculator from "../components/ads/AdSlotAfterCalculator.astro";
 import { buildPageMeta } from "../lib/seo/meta";
 import { buildCalculatorWebApplicationSchema } from "../lib/schema/web-application";
+import FaqSection from "../components/common/FaqSection.astro";
+import PartnerOffers from "../components/monetization/PartnerOffers.astro";
 
 const meta = buildPageMeta({
-  title: "Taksi Ücreti Hesaplama",
+  title: `Taksi Ücreti Hesaplama ${new Date().getFullYear()} — 81 İl Güncel Tarife`,
   description:
-    "İlinizi ve mesafeyi girin, güncel tarifeye göre tahmini taksi ücretinizi anında hesaplayın. Hesaplama tamamen tarayıcınızda çalışır, girdileriniz kaydedilmez.",
+    "İlini seç, kilometreyi gir: güncel taksi tarifesine göre tahmini taksi ücreti anında hesaplanır. Açılış, km, indi-bindi, bekleme ve köprü/otoyol dahil. Ücretsiz, üyeliksiz.",
   path: "/taksi-ucreti-hesaplama/",
 });
 
@@ -24,10 +26,11 @@ const structuredData = [buildCalculatorWebApplicationSchema()];
     ]}
   />
 
-  <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">Taksi Ücreti Hesaplama</h1>
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-10">
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">Taksi Ücreti Hesaplama</h1>
     <p class="text-ink-600 mt-3 text-lg">
-      İlinizi, araç türünü ve mesafeyi girin; güncel tarifeye göre tahmini ücretinizi hemen görün.
+      İlini seç ve mesafeyi gir; güncel tarifeye göre tahmini taksi ücreti yazarken hesaplanır.
+      Sonucu bağlantı olarak paylaşabilirsin.
     </p>
 
     <div class="mt-8">
@@ -38,7 +41,7 @@ const structuredData = [buildCalculatorWebApplicationSchema()];
   <AdSlotAfterCalculator />
 
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h2 class="text-ink-900 text-xl font-bold">Hesaplama nasıl çalışır?</h2>
+    <h2 class="section-title">Hesaplama nasıl çalışır?</h2>
     <p class="text-ink-600 mt-2">
       Tahmini tutar; açılış ücreti, mesafe bedeli, varsa bekleme bedeli ve ek geçiş ücretinin
       toplanıp o il için belirlenmiş minimum ücretle karşılaştırılmasıyla hesaplanır. Gerçek
@@ -51,4 +54,42 @@ const structuredData = [buildCalculatorWebApplicationSchema()];
       Hesaplama yöntemini ayrıntılı okuyun →
     </a>
   </section>
+
+  <section class="mx-auto max-w-3xl px-4 pb-4">
+    <h2 class="section-title">Mesafeyi nasıl bulurum?</h2>
+    <ol class="text-ink-700 mt-4 list-decimal space-y-2 pl-5">
+      <li>
+        Google Haritalar, Yandex Haritalar veya Apple Haritalar'da başlangıç ve varış noktanı gir.
+      </li>
+      <li>Araç ile yol tarifini seç; önerilen güzergâhın kilometresini not et.</li>
+      <li>Kilometreyi hesaplama aracına yaz. Yoğun trafikte bekleme süresini de ekleyebilirsin.</li>
+    </ol>
+  </section>
+
+  <PartnerOffers kinds={["airportTransfer", "carRental", "hotel"]} />
+
+  <FaqSection
+    entries={[
+      {
+        question: "Taksi ücreti hesaplama aracı ne kadar doğru?",
+        answer:
+          "Araç, ilin güncel resmî tarifesini (açılış, km ve indi-bindi ücreti) kullanır; bu nedenle aynı mesafe için taksimetreye oldukça yakın bir tahmin verir. Trafikte bekleme, farklı güzergâh ve köprü/otoyol geçişleri gerçek tutarı değiştirebilir.",
+      },
+      {
+        question: "Bekleme ücreti nasıl hesaplanır?",
+        answer:
+          "Tarifesinde bekleme ücreti tanımlı illerde, trafikte ya da yolcu beklerken geçen her dakika için dakika ücreti eklenir. Bekleme süresini 'Bekleme süresi ve köprü/otoyol ekle' bölümünden girebilirsin.",
+      },
+      {
+        question: "Köprü ve otoyol ücretini kim öder?",
+        answer:
+          "Genel uygulamada köprü ve otoyol geçiş ücretleri taksimetreye dahil değildir ve yolcu tarafından ayrıca ödenir. Hesaplama aracında bu tutarı ayrıca ekleyebilirsin.",
+      },
+      {
+        question: "Hesaplama sonucunu nasıl paylaşırım?",
+        answer:
+          "Sonuç panelindeki 'Sonucu paylaş' düğmesi, seçtiğin il ve mesafeyle doğrudan açılan bir bağlantı oluşturur; telefonda paylaşım menüsü açılır, bilgisayarda bağlantı panoya kopyalanır.",
+      },
+    ]}
+  />
 </BaseLayout>

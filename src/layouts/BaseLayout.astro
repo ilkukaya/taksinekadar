@@ -5,7 +5,16 @@ import type { PageMeta } from "../lib/seo/meta";
 import Header from "../components/navigation/Header.astro";
 import Footer from "../components/navigation/Footer.astro";
 import JsonLd from "../components/structured-data/JsonLd.astro";
+import AdSlotMobileSticky from "../components/ads/AdSlotMobileSticky.astro";
+import CookieNotice from "../components/common/CookieNotice.astro";
 import { buildOrganizationSchema, buildWebSiteSchema } from "../lib/schema/organization";
+import {
+  ADSENSE_PUB_ID,
+  GA4_ID,
+  CF_BEACON_TOKEN,
+  VERIFICATION,
+  USES_THIRD_PARTY_COOKIES,
+} from "../config/monetization";
 
 interface Props {
   meta: PageMeta;
@@ -14,55 +23,98 @@ interface Props {
 
 const { meta, structuredData = [] } = Astro.props;
 const isHome = Astro.url.pathname === "/";
-const adsensePubId = import.meta.env.PUBLIC_ADSENSE_PUB_ID;
 ---
 
 <!doctype html>
-<html lang={SITE.language}>
+<html lang={SITE.language} dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{meta.title}</title>
     <meta name="description" content={meta.description} />
     <link rel="canonical" href={meta.canonical} />
     <meta name="robots" content={meta.robots} />
+    <link rel="alternate" hreflang="tr-TR" href={meta.canonical} />
+    <link rel="alternate" hreflang="x-default" href={meta.canonical} />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={meta.type} />
     <meta property="og:title" content={meta.title} />
     <meta property="og:description" content={meta.description} />
     <meta property="og:url" content={meta.ogUrl} />
     <meta property="og:image" content={meta.ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={meta.ogImageAlt} />
     <meta property="og:site_name" content={meta.siteName} />
     <meta property="og:locale" content={meta.locale.replace("-", "_")} />
+    {meta.publishedTime && <meta property="article:published_time" content={meta.publishedTime} />}
+    {meta.modifiedTime && <meta property="article:modified_time" content={meta.modifiedTime} />}
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={meta.title} />
+    <meta name="twitter:description" content={meta.description} />
+    <meta name="twitter:image" content={meta.ogImage} />
 
-    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content={SITE.themeColor} />
+    <meta name="theme-color" content="#121417" />
+    <meta name="application-name" content={SITE.namePlain} />
+    <meta name="apple-mobile-web-app-title" content={SITE.namePlain} />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM özeti" />
+
+    {VERIFICATION.google && <meta name="google-site-verification" content={VERIFICATION.google} />}
+    {VERIFICATION.bing && <meta name="msvalidate.01" content={VERIFICATION.bing} />}
+    {VERIFICATION.yandex && <meta name="yandex-verification" content={VERIFICATION.yandex} />}
 
     {isHome && <JsonLd data={buildOrganizationSchema()} />}
     {isHome && <JsonLd data={buildWebSiteSchema()} />}
     {structuredData.map((data) => <JsonLd data={data} />)}
 
     {
-      adsensePubId && (
+      ADSENSE_PUB_ID && (
+        <>
+          <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+          <script
+            is:inline
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUB_ID}`}
+            crossorigin="anonymous"
+          />
+        </>
+      )
+    }
+    {
+      GA4_ID && (
+        <>
+          <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`} />
+          <script
+            is:inline
+            set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config",${JSON.stringify(GA4_ID)},{anonymize_ip:true});`}
+          />
+        </>
+      )
+    }
+    {
+      CF_BEACON_TOKEN && (
         <script
           is:inline
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsensePubId}`}
-          crossorigin="anonymous"
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: CF_BEACON_TOKEN })}
         />
       )
     }
   </head>
-  <body>
+  <body class="flex min-h-dvh flex-col">
     <a href="#main-content" class="skip-link">İçeriğe geç</a>
     <Header />
-    <main id="main-content">
+    <main id="main-content" class="flex-1">
       <slot />
     </main>
     <Footer />
+    <AdSlotMobileSticky />
+    {USES_THIRD_PARTY_COOKIES && <CookieNotice />}
   </body>
 </html>

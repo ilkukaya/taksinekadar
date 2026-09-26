@@ -9,6 +9,11 @@ import UnverifiedNotice from "../components/common/UnverifiedNotice.astro";
 import SourceNote from "../components/common/SourceNote.astro";
 import AdSlotAfterCalculator from "../components/ads/AdSlotAfterCalculator.astro";
 import AdSlotInContent from "../components/ads/AdSlotInContent.astro";
+import TariffStats from "../components/tariffs/TariffStats.astro";
+import FaqSection from "../components/common/FaqSection.astro";
+import PartnerOffers from "../components/monetization/PartnerOffers.astro";
+import { getTaxiStandsByDistrict } from "../lib/repositories/taxi-stands";
+import { calculateFare } from "../lib/calculation/fare-calculator";
 import { buildPageMeta, withBrandSuffix } from "../lib/seo/meta";
 import { canonicalUrl } from "../config/site";
 import { getActiveProvinces } from "../lib/repositories/provinces";
@@ -74,7 +79,53 @@ const description = displayTariff
     : `${province.name} taksi ücreti (tahmini): açılış ${formatCurrencyTRY(displayTariff.openingFee)}, km ${formatCurrencyTRY(displayTariff.pricePerKm)}, indi-bindi ${formatCurrencyTRY(displayTariff.minimumFare)} civarındadır.`
   : `${province.name} için güncel taksi tarifesi henüz doğrulanmadı. Resmî kaynaklardan doğrulama sağlandığında bu sayfa güncellenecektir.`;
 
-const meta = buildPageMeta({ title, description, path, noindex: !hasAnyDisplayableTariff });
+const meta = buildPageMeta({
+  title,
+  description,
+  path,
+  noindex: !hasAnyDisplayableTariff,
+  ogImagePath: `/og/${province.slug}.jpg`,
+  ogImageAlt: `${province.name} taksi ücreti`,
+});
+
+const districtsWithStands = districts
+  .map((district) => ({ district, count: getTaxiStandsByDistrict(district.id).length }))
+  .filter(({ count }) => count > 0)
+  .sort((a, b) => b.count - a.count);
+const totalStands = districtsWithStands.reduce((sum, d) => sum + d.count, 0);
+
+const loc = locativeOf(province.name);
+const isEstimateOnly = !primaryTariff && !!provisionalTariff;
+const faqEntries = displayTariff
+  ? [
+      {
+        question: `${loc} taksi açılış ücreti ne kadar?`,
+        answer: isEstimateOnly
+          ? `${loc} taksi açılış ücreti tahmini olarak ${formatCurrencyTRY(displayTariff.openingFee)} civarındadır. Bu rakam resmî bir belediye/UKOME kararıyla ayrıca doğrulanmamıştır.`
+          : `${loc} güncel taksi açılış ücreti ${formatCurrencyTRY(displayTariff.openingFee)}'dir. Tarife ${formatDateTR(displayTariff.validFrom)} tarihinde yürürlüğe girmiştir.`,
+      },
+      {
+        question: `${loc} taksi km ücreti ne kadar?`,
+        answer: `${loc} taksi kilometre ücreti ${isEstimateOnly ? "tahmini olarak " : ""}${formatCurrencyTRY(displayTariff.pricePerKm)}'dir. Açılış ücretine her kilometre için bu tutar eklenir.`,
+      },
+      {
+        question: `${loc} indi-bindi (minimum) taksi ücreti ne kadar?`,
+        answer: `${loc} indi-bindi ücreti ${isEstimateOnly ? "tahmini olarak " : ""}${formatCurrencyTRY(displayTariff.minimumFare)}'dir. Kısa yolculuklarda taksimetre bu tutarın altında kalsa bile minimum ücret ödenir.`,
+      },
+      {
+        question: `${loc} 10 km taksi ne kadar tutar?`,
+        answer: `${loc} 10 km'lik bir taksi yolculuğu, bekleme ve köprü/otoyol ücreti hariç yaklaşık ${formatCurrencyTRY(calculateFare(displayTariff, { distanceKm: 10 }).estimatedTotal)} tutar. 5 km yaklaşık ${formatCurrencyTRY(calculateFare(displayTariff, { distanceKm: 5 }).estimatedTotal)}, 20 km ise yaklaşık ${formatCurrencyTRY(calculateFare(displayTariff, { distanceKm: 20 }).estimatedTotal)} tutar.`,
+      },
+      ...(totalStands > 0
+        ? [
+            {
+              question: `${loc} kaç taksi durağı var?`,
+              answer: `Sitemizde ${province.name} genelinde ${districtsWithStands.length} ilçede toplam ${totalStands} taksi durağı telefon ve adres bilgisiyle listelenmektedir. En çok durak ${districtsWithStands[0]!.district.name} ilçesindedir (${districtsWithStands[0]!.count} durak).`,
+            },
+          ]
+        : []),
+    ]
+  : [];
 
 const structuredData = [
   {
@@ -83,6 +134,9 @@ const structuredData = [
     name: title,
     description,
     url: canonicalUrl(path),
+    inLanguage: "tr-TR",
+    ...(displayTariff ? { dateModified: displayTariff.lastVerifiedAt } : {}),
+    about: { "@type": "AdministrativeArea", name: province.name, containedInPlace: "Türkiye" },
   },
 ];
 ---
@@ -96,10 +150,19 @@ const structuredData = [
     ]}
   />
 
-  <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">{province.name} Taksi Ücreti Ne Kadar?</h1>
+  <section class="mx-auto max-w-6xl px-4 pt-6 pb-8">
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <p class="eyebrow">
+          {province.region} Bölgesi · {String(province.plateCode).padStart(2, "0")}
+        </p>
+        <h1 class="mt-2 text-3xl leading-tight sm:text-5xl">
+          {province.name} Taksi Ücreti Ne Kadar?
+        </h1>
+      </div>
+    </div>
 
-    <div class="mt-4">
+    <div class="mt-4 max-w-3xl">
       {
         primaryTariff ? (
           <TariffSummary locationName={province.name} tariff={primaryTariff} />
@@ -111,8 +174,44 @@ const structuredData = [
       }
     </div>
 
-    <div class="mt-8">
-      <FareCalculator preselectedProvinceId={province.id} />
+    {
+      displayTariff && (
+        <div class="mt-6">
+          <TariffStats tariff={displayTariff} isEstimate={isEstimateOnly} />
+        </div>
+      )
+    }
+
+    <nav class="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Sayfa içi bağlantılar">
+      <a href="#hesapla" class="chip">Ücret hesapla</a>
+      {
+        displayTariff && (
+          <a href="#mesafe" class="chip">
+            Mesafeye göre ücret
+          </a>
+        )
+      }
+      {
+        totalStands > 0 && (
+          <a href="#duraklar" class="chip">
+            Taksi durakları ({totalStands})
+          </a>
+        )
+      }
+      {
+        faqEntries.length > 0 && (
+          <a href="#sss" class="chip">
+            Sık sorulanlar
+          </a>
+        )
+      }
+    </nav>
+
+    <div class="mt-8" id="hesapla">
+      <FareCalculator
+        preselectedProvinceId={province.id}
+        heading={`${province.name} taksi ücreti hesapla`}
+      />
     </div>
   </section>
 
@@ -121,8 +220,8 @@ const structuredData = [
   {
     displayTariffs.length > 0 && (
       <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">Tarife Tablosu</h2>
-        <div class="mt-4 overflow-x-auto">
+        <h2 class="section-title">{province.name} Taksi Tarife Tablosu</h2>
+        <div class="border-ink-100 mt-4 overflow-x-auto rounded-2xl border bg-white px-4">
           <table class="w-full min-w-[480px] border-collapse text-left text-sm">
             <thead>
               <tr class="border-ink-200 text-ink-500 border-b">
@@ -166,8 +265,8 @@ const structuredData = [
 
   {
     displayTariff && (
-      <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">Mesafeye Göre Tahmini Ücret</h2>
+      <section class="mx-auto max-w-3xl px-4 py-10" id="mesafe">
+        <h2 class="section-title">Mesafeye Göre Tahmini Ücret</h2>
         <p class="text-ink-600 mt-1">
           {locativeOf(province.name)}{" "}
           {VEHICLE_TYPE_LABELS[displayTariff.vehicleType].toLocaleLowerCase("tr-TR")} için mesafeye
@@ -185,7 +284,7 @@ const structuredData = [
   {
     districtTariffs.length > 0 && (
       <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">İlçe Bazında Farklı Tarife</h2>
+        <h2 class="section-title">İlçe Bazında Farklı Tarife</h2>
         <p class="text-ink-600 mt-1">
           Bazı ilçelerde il genelinden farklı, ayrıca doğrulanmış bir tarife uygulanabilir:
         </p>
@@ -214,8 +313,45 @@ const structuredData = [
     )
   }
 
+  {
+    totalStands > 0 && (
+      <section class="mx-auto max-w-3xl px-4 py-10" id="duraklar">
+        <h2 class="section-title">{province.name} Taksi Durakları</h2>
+        <p class="text-ink-600 mt-2">
+          {province.name} genelinde {districtsWithStands.length} ilçede{" "}
+          <strong>{totalStands}</strong> taksi durağının telefon ve adresi listeleniyor. En çok
+          durak bulunan ilçeler:
+        </p>
+        <ul class="mt-5 grid gap-2 sm:grid-cols-2">
+          {districtsWithStands.slice(0, 8).map(({ district, count }) => (
+            <li>
+              <a
+                href={`/${province.slug}/${district.slug}/taksi-duraklari/`}
+                class="card-link border-ink-100 flex items-center justify-between rounded-2xl border bg-white px-4 py-3"
+              >
+                <span class="text-ink-900 font-bold">{district.name}</span>
+                <span class="text-ink-500 text-sm">{count} durak →</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <a href={`/${province.slug}/taksi-duraklari/`} class="btn-dark mt-5">
+          {province.name} tüm taksi durakları
+        </a>
+      </section>
+    )
+  }
+
+  <PartnerOffers
+    kinds={airports.length > 0
+      ? ["airportTransfer", "carRental", "hotel"]
+      : ["carRental", "hotel", "busTicket"]}
+    place={province.name}
+    title={`${province.name} yolculuğunu planla`}
+  />
+
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h2 class="text-ink-900 text-xl font-bold">İndi-Bindi ve Bekleme Ücreti</h2>
+    <h2 class="section-title">İndi-Bindi ve Bekleme Ücreti</h2>
     <p class="text-ink-600 mt-2">
       "İndi-bindi ücreti", bir yolculukta ödenecek minimum tutardır; hesaplanan tutar bu seviyenin
       altında kalırsa yolcudan minimum ücret tahsil edilir.
@@ -231,7 +367,7 @@ const structuredData = [
   {
     history.length > 0 && (
       <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">Geçmiş Tarife Özeti</h2>
+        <h2 class="section-title">Geçmiş Tarife Özeti</h2>
         <ul class="mt-4 space-y-3">
           {history.map((t) => (
             <li class="card">
@@ -266,7 +402,7 @@ const structuredData = [
   {
     (airports.length > 0 || busTerminals.length > 0) && (
       <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">Havalimanı ve Otogar</h2>
+        <h2 class="section-title">Havalimanı ve Otogar</h2>
         <ul class="mt-4 space-y-2">
           {airports.map((a) => (
             <li>
@@ -287,8 +423,13 @@ const structuredData = [
     )
   }
 
+  <FaqSection
+    entries={faqEntries}
+    title={`${province.name} Taksi Ücreti Hakkında Sık Sorulanlar`}
+  />
+
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h2 class="text-ink-900 text-xl font-bold">İlgili Rehberler</h2>
+    <h2 class="section-title">İlgili Rehberler</h2>
     <ul class="text-ink-700 mt-4 list-inside list-disc space-y-1">
       <li>
         <a href="/rehber/taksi-ucreti-nasil-hesaplanir/" class="hover:text-ink-900 underline">
@@ -311,7 +452,7 @@ const structuredData = [
   {
     sameRegionProvinces.length > 0 && (
       <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">{province.region} Bölgesindeki Diğer İller</h2>
+        <h2 class="section-title">{province.region} Bölgesindeki Diğer İller</h2>
         <ul class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
           {sameRegionProvinces.map((p) => (
             <li>

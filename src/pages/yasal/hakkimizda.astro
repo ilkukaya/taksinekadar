@@ -1,0 +1,93 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
+import { buildPageMeta } from "../../lib/seo/meta";
+import { SITE } from "../../config/site";
+import { getSiteWideTotals } from "../../lib/repositories/stats";
+
+const totals = getSiteWideTotals();
+
+const meta = buildPageMeta({
+  title: "Hakkımızda — Taksi Ne Kadar? Nedir, Nasıl Çalışır?",
+  description:
+    "Taksi Ne Kadar?, Türkiye'nin 81 ili için güncel taksi tarifelerini, ücret hesaplama aracını ve taksi duraklarını tek yerde toplayan bağımsız bir bilgi sitesidir.",
+  path: "/yasal/hakkimizda/",
+});
+
+const principles = [
+  {
+    title: "Kaynağı belli rakamlar",
+    text: "Her doğrulanmış tarife; belediye/UKOME kararı veya güvenilir haber kaynağıyla, yürürlük ve son kontrol tarihiyle yayınlanır. Doğrulayamadığımız rakamlar açıkça 'tahmini' olarak işaretlenir.",
+  },
+  {
+    title: "Uydurma bilgi yok",
+    text: "Bilmediğimiz bir telefon numarasını, adresi veya gece tarifesini doldurmak yerine boş bırakırız. Şüpheli, birçok durakta tekrar eden telefon numaraları yayından otomatik olarak çıkarılır.",
+  },
+  {
+    title: "Ücretsiz ve üyeliksiz",
+    text: "Site; üyelik, uygulama indirme veya kişisel bilgi istemez. Hesaplama tamamen tarayıcınızda çalışır. Site, reklam ve açıkça işaretlenmiş iş ortağı bağlantılarıyla ücretsiz kalır.",
+  },
+  {
+    title: "Düzeltmeye açık",
+    text: "Yanlış veya eskimiş bir bilgi gördüğünüzde bize yazdığınız her bildirim incelenir ve doğrulanırsa veri kaynağında düzeltilir.",
+  },
+];
+---
+
+<BaseLayout meta={meta}>
+  <Breadcrumb
+    items={[
+      { name: "Ana Sayfa", path: "/" },
+      { name: "Hakkımızda", path: "/yasal/hakkimizda/" },
+    ]}
+  />
+
+  <section class="mx-auto max-w-3xl px-4 pt-6 pb-10">
+    <p class="eyebrow">Hakkımızda</p>
+    <h1 class="mt-2 text-3xl leading-tight sm:text-5xl">Binmeden önce ne kadar tutacağını bil.</h1>
+    <p class="text-ink-700 mt-5 text-lg leading-relaxed">
+      {SITE.name}, taksiye binmeden önce "bu yol ne kadar tutar?" sorusuna hızlı ve dürüst bir cevap
+      vermek için kuruldu. Türkiye'nin {totals.provinceCount} ili için güncel taksi tarifelerini, bu tarifelerle
+      çalışan bir ücret hesaplama aracını ve {totals.activeStandCount.toLocaleString("tr-TR")}
+      taksi durağının adres ve telefon bilgisini tek bir yerde topluyoruz.
+    </p>
+
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      {
+        principles.map((p) => (
+          <div class="card">
+            <p class="text-ink-900 text-lg font-extrabold">{p.title}</p>
+            <p class="text-ink-600 mt-2 text-sm leading-relaxed">{p.text}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <h2 class="section-title mt-12">Ne yapmıyoruz?</h2>
+    <p class="text-ink-700 mt-3 leading-relaxed">
+      {SITE.name} bir taksi şirketi, çağrı merkezi veya rezervasyon platformu değildir. Taksi çağırmaz,
+      ödeme almaz ve listelenen duraklarla ticari bir bağı yoktur. Hesaplanan tutarlar tahmindir; gerçek
+      taksimetre tutarı trafik, bekleme ve güzergâha göre değişebilir.
+    </p>
+
+    <h2 class="section-title mt-12">Nasıl çalışıyoruz?</h2>
+    <p class="text-ink-700 mt-3 leading-relaxed">
+      Veri kaynaklarımızı ve doğrulama yöntemimizi <a
+        href="/yasal/veri-kaynaklari/"
+        class="text-ink-900 font-semibold underline">veri kaynakları</a
+      > sayfasında ayrıntılı olarak anlatıyoruz. Hesaplamanın mantığını <a
+        href="/rehber/taksi-ucreti-nasil-hesaplanir/"
+        class="text-ink-900 font-semibold underline">taksi ücreti nasıl hesaplanır</a
+      > rehberinde bulabilirsiniz.
+    </p>
+
+    <div class="bg-ink-950 mt-12 rounded-3xl p-6 text-white sm:p-8">
+      <p class="text-xl font-extrabold">Bir hata mı gördünüz?</p>
+      <p class="text-ink-300 mt-2">
+        Tarife, telefon veya adres düzeltmeleri için bize yazın; doğrulandığında hemen
+        güncelliyoruz.
+      </p>
+      <a href="/yasal/iletisim/" class="btn-primary mt-5">İletişime geç</a>
+    </div>
+  </section>
+</BaseLayout>

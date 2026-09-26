@@ -59,6 +59,7 @@ function main() {
     { loc: canonicalUrl("/rehber/") },
     { loc: canonicalUrl("/yasal/veri-kaynaklari/") },
     { loc: canonicalUrl("/yasal/iletisim/") },
+    { loc: canonicalUrl("/yasal/hakkimizda/") },
   ];
 
   const provinces = getActiveProvinces();

@@ -26,14 +26,14 @@ const meta = buildPageMeta({
   />
 
   <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">Veri Kaynakları</h1>
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">Veri Kaynakları</h1>
     <p class="text-ink-600 mt-3 text-lg">
       Bu sayfa, sitedeki verilerin nereden geldiğini ve nasıl güncel tutulduğunu şeffaf biçimde
       açıklar. Kaynağını doğrulayamadığımız hiçbir tarife, telefon veya adres bilgisini
       yayımlamayız.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">İl ve İlçe Sınırları</h2>
+    <h2 class="section-title mt-10 text-2xl sm:text-2xl">İl ve İlçe Sınırları</h2>
     <p class="text-ink-600 mt-2">
       81 il ve {totals.districtCount} ilçe verisi, birbirinden bağımsız kamuya açık il/ilçe referans veri
       kümeleri karşılaştırılarak derlenmiştir. Plaka kodu, bölge, sabit hat alan kodu ve eski isim (varsa)
@@ -66,14 +66,13 @@ const meta = buildPageMeta({
       ODbL ile lisanslıdır.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Tarifeleri</h2>
+    <h2 class="section-title mt-10 text-2xl sm:text-2xl">Taksi Tarifeleri</h2>
     <p class="text-ink-600 mt-2">
       Her il sayfasında tarifenin kaynağı (belediye/UKOME kararı, esnaf odası açıklaması veya haber
       kaynağı), yürürlük tarihi ve son kontrol tarihi ayrı ayrı gösterilir. Aşağıdaki{" "}
-      {unverified.length} il için henüz bu şekilde resmî bir kaynak doğrulayamadık; bu illerin
-      sayfalarında, açıkça "tahmini" olarak işaretlenmiş, genel bir hesaplayıcı ortalamasına dayanan
-      bir rakam gösterilir — belediye/UKOME kararına dayalı doğrulanmış tarifelerle karıştırılmaması
-      için ayrı bir görünümdedir:
+      {unverified.length} il için henüz bu şekilde resmî bir kaynak doğrulayamadık; bu illerin sayfalarında,
+      açıkça "tahmini" olarak işaretlenmiş, genel bir hesaplayıcı ortalamasına dayanan bir rakam gösterilir
+      — belediye/UKOME kararına dayalı doğrulanmış tarifelerle karıştırılmaması için ayrı bir görünümdedir:
     </p>
     <ul class="text-ink-500 mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
       {unverified.map((p) => <li>{p.name}</li>)}
@@ -82,14 +81,14 @@ const meta = buildPageMeta({
       Bu iller için resmî kaynak araştırması sürüyor; doğrulandıkça sayfaları güncellenecektir.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">Havalimanı ve Otogar</h2>
+    <h2 class="section-title mt-10 text-2xl sm:text-2xl">Havalimanı ve Otogar</h2>
     <p class="text-ink-600 mt-2">
       Havalimanı ve otogar sayfalarındaki il/ilçe ve konum bilgileri DHMİ (Devlet Hava Meydanları
       İşletmesi), ilgili işletmecilerin resmî siteleri ve Wikipedia gibi kamuya açık kaynaklar
       karşılaştırılarak derlenmiştir; her sayfada ilgili kaynak bağlantısı verilir.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">Popüler Rotalar</h2>
+    <h2 class="section-title mt-10 text-2xl sm:text-2xl">Popüler Rotalar</h2>
     <p class="text-ink-600 mt-2">
       Havalimanından şehir merkezine popüler güzergâhlarda gösterilen yol mesafesi, yalnızca isimli
       ve kontrol edilebilir bir kaynaktan (haber kuruluşu veya resmî kurum sayfası)
@@ -99,7 +98,7 @@ const meta = buildPageMeta({
       belirtilir.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">Taksi Durakları</h2>
+    <h2 class="section-title mt-10 text-2xl sm:text-2xl">Taksi Durakları</h2>
     <p class="text-ink-600 mt-2">
       {totals.activeStandCount} taksi durağının adı, adresi ve (varsa) telefon numarası il ve ilçeye göre
       listelenmiştir. Telefon numaraları otomatik kalite kontrolünden geçirilir: aynı numara birbiriyle
@@ -111,7 +110,7 @@ const meta = buildPageMeta({
       Bayburt, Bartın, Iğdır ve Kilis için henüz durak sayfası bulunmuyor.
     </p>
 
-    <h2 class="text-ink-900 mt-10 text-xl font-bold">Güncelleme Yöntemi</h2>
+    <h2 class="section-title mt-10 text-2xl sm:text-2xl">Güncelleme Yöntemi</h2>
     <p class="text-ink-600 mt-2">
       Veriler, kaynak dosyaların doğrulanması, normalize edilmesi ve mükerrer kayıt taraması gibi
       adımlardan geçtikten sonra build sürecinde siteye yansıtılır. Kritik bir veri hatası tespit

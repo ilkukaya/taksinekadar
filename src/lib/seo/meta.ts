@@ -6,6 +6,11 @@ export type PageMetaInput = {
   path: string;
   noindex?: boolean;
   ogImagePath?: string;
+  ogImageAlt?: string;
+  /** "article" for editorial content (rehber), "website" for everything else. */
+  type?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
 };
 
 export type PageMeta = {
@@ -17,6 +22,10 @@ export type PageMeta = {
   ogUrl: string;
   siteName: string;
   locale: string;
+  ogImageAlt: string;
+  type: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
 };
 
 /**
@@ -29,11 +38,17 @@ export function buildPageMeta(input: PageMetaInput): PageMeta {
     title: input.title,
     description: input.description,
     canonical: canonicalUrl(input.path),
-    robots: input.noindex ? "noindex, follow" : "index, follow",
+    robots: input.noindex
+      ? "noindex, follow"
+      : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
     ogImage: input.ogImagePath ? canonicalUrl(input.ogImagePath) : defaultOgImageUrl(),
     ogUrl: canonicalUrl(input.path),
     siteName: SITE.name,
     locale: SITE.locale,
+    ogImageAlt: input.ogImageAlt ?? input.title,
+    type: input.type ?? "website",
+    publishedTime: input.publishedTime,
+    modifiedTime: input.modifiedTime,
   };
 }
 

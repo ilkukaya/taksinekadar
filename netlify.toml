@@ -1,8 +1,6 @@
-# Netlify builds and deploys directly on every push (no GitHub Actions in the loop) —
-# there's no scheduled/external data pipeline yet that would need a separate CI job, so
-# Netlify's own build is the whole pipeline. The command still gates deploys on data
-# integrity and unit tests; `pnpm build` itself fails on broken links, orphan pages, or
-# duplicate titles/descriptions (see scripts/audit-internal-links.ts).
+# Netlify builds and deploys directly on every push (no GitHub Actions in the loop).
+# The command gates deploys on data integrity and unit tests; `pnpm build` itself fails on
+# broken links, orphan pages, or duplicate titles/descriptions (scripts/audit-internal-links.ts).
 [build]
   publish = "dist"
   command = "pnpm data:validate && pnpm test && pnpm build"
@@ -10,12 +8,71 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# ---------------------------------------------------------------------------------------
+# Headers
+# ---------------------------------------------------------------------------------------
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# Fingerprinted build assets (JS/CSS/fonts) never change under the same name.
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/og/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/search-index.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
 [[headers]]
   for = "/sitemaps/*.xml"
   [headers.values]
     Content-Type = "application/xml; charset=UTF-8"
+    Cache-Control = "public, max-age=3600"
 
 [[headers]]
   for = "/sitemap-index.xml"
   [headers.values]
     Content-Type = "application/xml; charset=UTF-8"
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/llms*.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
+
+# ---------------------------------------------------------------------------------------
+# Redirects
+# ---------------------------------------------------------------------------------------
+# Common alternate spellings/entry points people type or link to.
+[[redirects]]
+  from = "/hesaplama/"
+  to = "/taksi-ucreti-hesaplama/"
+  status = 301
+
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "/sitemap-index.xml"
+  status = 301
+
+[[redirects]]
+  from = "/duraklar/"
+  to = "/taksi-duraklari/"
+  status = 301

@@ -2,14 +2,15 @@ import { test, expect } from "@playwright/test";
 
 test("site search finds a province and links to its tariff page", async ({ page }) => {
   await page.goto("/");
-  await page.locator("#site-search-input").fill("Ankara");
+  const hero = page.locator("main [data-search-root]").first();
+  await hero.locator("[data-search-input]").fill("Ankara");
 
-  const results = page.locator("#site-search-results");
+  const results = hero.locator("[data-search-results]");
   await expect(results).toBeVisible();
 
   // "Ankara" also matches AŞTİ ("Ankara Şehirlerarası..."), which is the search index
   // correctly surfacing a second relevant result — pick the province result specifically.
-  const provinceResult = results.getByRole("link", { name: "Ankara", exact: true });
+  const provinceResult = results.getByRole("option", { name: /^Ankara İl tarifesi$/ });
   await expect(provinceResult).toBeVisible();
 
   await provinceResult.click();
@@ -27,7 +28,16 @@ test("mobile menu opens via native details/summary with zero custom JavaScript",
 
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");
-  await expect(details.getByRole("link", { name: "İller" })).toBeVisible();
+  await expect(details.getByRole("link", { name: "Tarifeler" })).toBeVisible();
+});
+
+test("header search opens a dialog that searches the whole site", async ({ page }) => {
+  await page.goto("/iller/");
+  await page.locator("[data-open-search]").click();
+  const dialog = page.locator("[data-search-dialog]");
+  await expect(dialog).toBeVisible();
+  await dialog.locator("[data-search-input]").fill("kadıköy");
+  await expect(dialog.getByRole("option").first()).toContainText("Kadıköy");
 });
 
 test("keyboard navigation reaches the skip link first", async ({ page }) => {

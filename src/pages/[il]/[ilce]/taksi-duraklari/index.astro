@@ -8,7 +8,9 @@ import { getActiveProvinces } from "../../../../lib/repositories/provinces";
 import { getDistrictsByProvince } from "../../../../lib/repositories/districts";
 import { getTaxiStandsByDistrict } from "../../../../lib/repositories/taxi-stands";
 import { locativeOf } from "../../../../lib/language/turkish-suffix";
-import { formatPhoneForTel } from "../../../../lib/utils/format";
+import { formatPhoneForTel, formatCurrencyTRY } from "../../../../lib/utils/format";
+import { getActiveTariff, getProvisionalTariff } from "../../../../lib/repositories/tariffs";
+import { calculateFare } from "../../../../lib/calculation/fare-calculator";
 import type { Province, District, TaxiStand } from "../../../../lib/validation/schemas";
 
 export function getStaticPaths() {
@@ -44,7 +46,23 @@ const path = `/${province.slug}/${district.slug}/taksi-duraklari/`;
 const title = withBrandSuffix(`${district.name} (${province.name}) Taksi Durakları`);
 const description = `${province.name} iline bağlı ${locativeOf(district.name)} ${stands.length} taksi durağının adı, adresi ve telefon numarası (varsa).`;
 
-const meta = buildPageMeta({ title, description, path });
+const meta = buildPageMeta({
+  title,
+  description,
+  path,
+  ogImagePath: `/og/${province.slug}.jpg`,
+});
+
+const districtTariff =
+  getActiveTariff(province.id, "yellow", district.id) ??
+  getActiveTariff(province.id, "yellow") ??
+  getProvisionalTariff(province.id);
+const siblingDistricts = getDistrictsByProvince(province.id)
+  .filter((d) => d.id !== district.id)
+  .map((d) => ({ d, count: getTaxiStandsByDistrict(d.id).length }))
+  .filter(({ count }) => count > 0)
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 12);
 
 const standPath = (stand: TaxiStand) => `/${province.slug}/${district.slug}/${stand.slug}/`;
 
@@ -68,52 +86,104 @@ const structuredData = [
     ]}
   />
 
-  <section class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">
+  <section class="mx-auto max-w-5xl px-4 py-10">
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">
       {district.name}
-      <span class="text-ink-500 font-normal">({province.name})</span> Taksi Durakları
+      <span class="text-ink-400 font-semibold">({province.name})</span> Taksi Durakları
     </h1>
     <p class="text-ink-600 mt-3 text-lg">
       {locativeOf(district.name)} listelenen <strong>{stands.length}</strong> taksi durağı{" "}
       {withPhone > 0 && <>({withPhone} tanesinde telefon numarası mevcut)</>}.
     </p>
 
-    <div class="mt-8 space-y-3">
+    {
+      districtTariff && (
+        <a
+          href={`/${province.slug}-taksi-ucreti/`}
+          class="meter mt-6 flex flex-wrap items-center justify-between gap-4 p-5 no-underline"
+        >
+          <span>
+            <span class="text-ink-300 block text-xs font-bold tracking-wider uppercase">
+              {locativeOf(district.name)} 10 km taksi
+              {districtTariff.status !== "active" && " (tahmini)"}
+            </span>
+            <span class="meter-digits mt-1 block text-3xl">
+              {formatCurrencyTRY(calculateFare(districtTariff, { distanceKm: 10 }).estimatedTotal)}
+            </span>
+            <span class="text-ink-300 mt-1 block text-xs">
+              Açılış {formatCurrencyTRY(districtTariff.openingFee)} · Km{" "}
+              {formatCurrencyTRY(districtTariff.pricePerKm)} · İndi-bindi{" "}
+              {formatCurrencyTRY(districtTariff.minimumFare)}
+            </span>
+          </span>
+          <span class="btn-primary px-4 py-2.5 text-sm">Ücreti hesapla →</span>
+        </a>
+      )
+    }
+
+    <ul class="mt-8 grid gap-3 md:grid-cols-2">
       {
         sortedStands.map((stand) => (
-          <div id={stand.slug} class="card">
-            <a href={standPath(stand)} class="text-ink-900 font-semibold hover:underline">
+          <li id={stand.slug} class="card flex flex-col p-4 sm:p-5">
+            <a
+              href={standPath(stand)}
+              class="text-ink-900 text-[1.0625rem] leading-snug font-extrabold hover:underline"
+            >
               {stand.name}
             </a>
             {stand.address && <p class="text-ink-600 mt-1 text-sm">{stand.address}</p>}
-            {stand.phonePrimary && (
-              <p class="mt-1 text-sm">
+            <div class="mt-auto flex flex-wrap items-center gap-2 pt-4">
+              {stand.phonePrimary && (
                 <a
                   href={`tel:${formatPhoneForTel(stand.phonePrimary)}`}
-                  class="text-ink-800 font-medium underline"
+                  class="btn-call px-3.5 py-2 text-sm"
+                  aria-label={`${stand.name} ara: ${stand.phonePrimary}`}
                 >
+                  <svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true">
+                    <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" />
+                  </svg>
                   {stand.phonePrimary}
                 </a>
-              </p>
-            )}
-            <p class="mt-1">
+              )}
               <a
                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stand.mapQuery ?? stand.name)}`}
                 target="_blank"
                 rel="noopener noreferrer nofollow"
-                class="text-ink-500 text-xs underline"
+                class="btn-ghost px-3 py-2"
               >
                 Haritada ara →
               </a>
-            </p>
-          </div>
+            </div>
+          </li>
         ))
       }
-    </div>
+    </ul>
 
-    <section class="mt-6">
-      <a href={`/${province.slug}-taksi-ucreti/`} class="text-ink-800 font-medium underline">
+    {
+      siblingDistricts.length > 0 && (
+        <section class="mt-12">
+          <h2 class="section-title text-2xl sm:text-2xl">
+            {province.name} diğer ilçelerdeki taksi durakları
+          </h2>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {siblingDistricts.map(({ d, count }) => (
+              <li>
+                <a href={`/${province.slug}/${d.slug}/taksi-duraklari/`} class="chip">
+                  {d.name} <span class="text-ink-400 ml-1 font-medium">{count}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <section class="mt-8 flex flex-wrap gap-3">
+      <a href={`/${province.slug}-taksi-ucreti/`} class="link-arrow">
         {province.name} taksi ücreti sayfasına git →
+      </a>
+      <a href={`/${province.slug}/taksi-duraklari/`} class="link-arrow">
+        {province.name} tüm taksi durakları →
       </a>
     </section>
   </section>

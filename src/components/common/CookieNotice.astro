@@ -1,0 +1,44 @@
+---
+/**
+ * KVKK-style informational cookie notice. Only rendered when a cookie-setting third party
+ * (AdSense or GA4) is configured. Dismissal is remembered in localStorage; if storage is
+ * unavailable the notice simply shows again next visit.
+ */
+---
+
+<div
+  class="border-ink-100 fixed inset-x-3 bottom-3 z-40 mx-auto hidden max-w-xl rounded-2xl border bg-white p-4 text-sm shadow-[var(--shadow-lift)] md:bottom-5"
+  role="region"
+  aria-label="Çerez bildirimi"
+  data-cookie-notice
+>
+  <p class="text-ink-700">
+    Reklam ve ziyaret istatistikleri için çerezler kullanıyoruz. Ayrıntılar için
+    <a href="/yasal/gizlilik-politikasi/" class="text-ink-900 font-semibold underline"
+      >gizlilik politikamıza</a
+    > bakabilirsiniz.
+  </p>
+  <div class="mt-3 flex justify-end">
+    <button type="button" class="btn-dark px-4 py-2 text-sm" data-cookie-accept>Anladım</button>
+  </div>
+</div>
+
+<script>
+  const KEY = "tnk-cookie-notice";
+  const el = document.querySelector<HTMLElement>("[data-cookie-notice]");
+  let seen = false;
+  try {
+    seen = localStorage.getItem(KEY) === "1";
+  } catch {
+    /* storage blocked */
+  }
+  if (el && !seen) el.classList.remove("hidden");
+  el?.querySelector("[data-cookie-accept]")?.addEventListener("click", () => {
+    el.classList.add("hidden");
+    try {
+      localStorage.setItem(KEY, "1");
+    } catch {
+      /* storage blocked */
+    }
+  });
+</script>

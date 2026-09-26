@@ -4,7 +4,9 @@ import Breadcrumb from "../../components/navigation/Breadcrumb.astro";
 import SourceNote from "../../components/common/SourceNote.astro";
 import AdSlotInContent from "../../components/ads/AdSlotInContent.astro";
 import { buildPageMeta } from "../../lib/seo/meta";
-import { canonicalUrl } from "../../config/site";
+import { SITE, canonicalUrl } from "../../config/site";
+import { buildFaqPageSchema } from "../../lib/schema/faq-page";
+import PartnerOffers from "../../components/monetization/PartnerOffers.astro";
 import { getCollection, getEntry, render } from "astro:content";
 import { formatDateTR } from "../../lib/utils/format";
 
@@ -29,7 +31,36 @@ const meta = buildPageMeta({
   title: guide.data.title,
   description: guide.data.description,
   path,
+  type: "article",
+  publishedTime: guide.data.publishedAt,
+  modifiedTime: guide.data.updatedAt,
 });
+
+// The visible "## Sık Sorulan Sorular" section (### question + answer paragraph) doubles as
+// FAQPage markup — parsed from the same markdown, so schema and page text always match.
+function extractFaq(markdown: string): { question: string; answer: string }[] {
+  const section = markdown.split(/^##\s+Sık Sorulan Sorular\s*$/m)[1];
+  if (!section) return [];
+  const body = section.split(/^##\s+/m)[0] ?? "";
+  return body
+    .split(/^###\s+/m)
+    .slice(1)
+    .map((chunk) => {
+      const [q, ...rest] = chunk.split("\n");
+      const answer = rest
+        .join(" ")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/[*_`]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return { question: (q ?? "").trim(), answer };
+    })
+    .filter((f) => f.question && f.answer);
+}
+const faq = extractFaq(guide.body ?? "");
+const wordCount = (guide.body ?? "").split(/\s+/).filter(Boolean).length;
+const readingMinutes = Math.max(1, Math.round(wordCount / 200));
+const mentionsAirport = /havaliman|transfer/i.test(guide.id);
 
 const structuredData = [
   {
@@ -40,7 +71,19 @@ const structuredData = [
     datePublished: guide.data.publishedAt,
     dateModified: guide.data.updatedAt,
     url: canonicalUrl(path),
+    mainEntityOfPage: canonicalUrl(path),
+    inLanguage: "tr-TR",
+    wordCount,
+    image: canonicalUrl(SITE.defaultOgImagePath),
+    author: { "@type": "Organization", name: `${SITE.name} editör ekibi`, url: SITE.url },
+    publisher: {
+      "@type": "Organization",
+      name: SITE.name,
+      url: SITE.url,
+      logo: { "@type": "ImageObject", url: canonicalUrl(SITE.logoPath) },
+    },
   },
+  ...(faq.length > 0 ? [buildFaqPageSchema(faq)] : []),
 ];
 ---
 
@@ -54,12 +97,13 @@ const structuredData = [
   />
 
   <article class="mx-auto max-w-3xl px-4 py-10">
-    <h1 class="text-ink-900 text-3xl font-bold">{guide.data.title}</h1>
+    <h1 class="text-3xl leading-tight sm:text-[2.75rem]">{guide.data.title}</h1>
     <p class="text-ink-500 mt-2 text-sm">
       Yayın tarihi: {formatDateTR(guide.data.publishedAt)} · Güncelleme: {
         formatDateTR(guide.data.updatedAt)
-      }
+      } · {readingMinutes} dk okuma
     </p>
+    <p class="text-ink-700 mt-4 text-lg leading-relaxed">{guide.data.description}</p>
 
     <div class="article-content mt-6">
       <Content />
@@ -79,12 +123,14 @@ const structuredData = [
     </div>
   </article>
 
+  {mentionsAirport && <PartnerOffers kinds={["airportTransfer", "carRental"]} />}
+
   <AdSlotInContent />
 
   {
     relatedEntries.length > 0 && (
       <section class="mx-auto max-w-3xl px-4 py-10">
-        <h2 class="text-ink-900 text-xl font-bold">İlgili Rehberler</h2>
+        <h2 class="section-title">İlgili Rehberler</h2>
         <ul class="text-ink-700 mt-4 list-inside list-disc space-y-1">
           {relatedEntries.map((entry) => (
             <li>
